@@ -38,12 +38,16 @@ export default function AuthPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    console.log("Clicou no botão Google");
     setError("");
     setLoading(true);
 
     try {
+      console.log("Iniciando Google Sign In...");
       await signInWithGoogle();
+      console.log("Google Sign In iniciado");
     } catch (err: any) {
+      console.error("Erro Google completo:", err);
       setError(err.message || "Erro ao entrar com Google");
       setLoading(false);
     }
