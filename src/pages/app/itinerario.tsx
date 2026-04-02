@@ -4,12 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ItinerarioDashboard } from "@/components/ItinerarioDashboard";
 import { ItinerarioEscolhaLogismoi } from "@/components/ItinerarioEscolhaLogismoi";
 import { useAuth } from "@/contexts/AuthContext";
-import { useOptionalPublicImage } from "@/hooks/useOptionalPublicImage";
 import { useTerapeuta } from "@/hooks/useTerapeuta";
 import { useUsuarioItinerario } from "@/hooks/useUsuarioItinerario";
-
-/** Imagem opcional: coloque `public/hero-bg.jpg` (ex.: deserto, mosteiro) para fundo fotográfico. */
-const HERO_BG_FILE = "hero-bg.jpg";
 
 export function ItinerarioAppPage() {
   const { user, loading, signOut } = useAuth();
@@ -24,7 +20,6 @@ export function ItinerarioAppPage() {
     marcarSemanaLida,
     marcandoSemana,
   } = useUsuarioItinerario();
-  const heroPhoto = useOptionalPublicImage(HERO_BG_FILE);
 
   if (loading) {
     return (
@@ -42,18 +37,11 @@ export function ItinerarioAppPage() {
     <div className="relative min-h-screen font-sans">
       <section className="relative overflow-hidden border-b border-white/[0.06]">
         <div
-          className="absolute inset-0 bg-hero-itinerario bg-cover bg-center"
+          className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-transparent"
           aria-hidden
         />
-        {heroPhoto && (
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-[0.42]"
-            style={{ backgroundImage: `url('/${HERO_BG_FILE}')` }}
-            aria-hidden
-          />
-        )}
         <div
-          className="absolute inset-0 bg-gradient-to-b from-black/55 via-[#1a1610]/80 to-scriptorium-bg"
+          className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#1a1610]/95"
           aria-hidden
         />
         <div
