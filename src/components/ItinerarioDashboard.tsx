@@ -97,7 +97,8 @@ export function ItinerarioDashboard({
         <CardHeader>
           <CardTitle className="text-lg">Próximo passo</CardTitle>
           <CardDescription>
-            Complete o upload do diagnóstico e registre reflexões semanais. Em
+            Complete o upload do diagnóstico e registre reflexões ao longo das
+            etapas. Em
             produção, isto pode vir de uma tabela{" "}
             <code className="rounded bg-scriptorium-bg px-1 text-scriptorium-gold">
               reflexoes

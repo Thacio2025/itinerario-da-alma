@@ -172,7 +172,7 @@ export function TerapeutaPage() {
     setBulkHint(partes.join(" · "));
   }
 
-  async function criarNovaSemana(e: React.FormEvent) {
+  async function criarNovaEtapa(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     const lid = Number(newLogismoiId);
@@ -183,11 +183,11 @@ export function TerapeutaPage() {
       return;
     }
     if (Number.isNaN(n) || n < 1 || n > 12) {
-      setError("Número da semana deve ser entre 1 e 12.");
+      setError("O número da etapa deve ser entre 1 e 12.");
       return;
     }
     if (!titulo) {
-      setError("Informe o título da semana.");
+      setError("Informe o título da etapa.");
       return;
     }
     setCreating(true);
@@ -203,7 +203,7 @@ export function TerapeutaPage() {
         insErr.code === "23505"
       ) {
         setError(
-          "Já existe uma semana com esse número para esse logismoi. Escolha outro número ou edite a linha existente.",
+          "Já existe uma etapa com esse número para esse logismoi. Escolha outro número ou edite a linha existente.",
         );
       } else {
         setError(insErr.message);
@@ -312,17 +312,17 @@ export function TerapeutaPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Plus className="h-6 w-6 text-scriptorium-gold" />
-              <CardTitle>Nova semana</CardTitle>
+              <CardTitle>Nova etapa</CardTitle>
             </div>
             <CardDescription>
-              Cria uma linha em <code className="text-scriptorium-gold">itinerario_semanas</code>
-              . Depois use <strong>Editar</strong> na lista para preencher leitura, doutrina e
-              exercício.
+              Cria uma linha em <code className="text-scriptorium-gold">itinerario_semanas</code>{" "}
+              (cada etapa do percurso). Depois use <strong>Editar</strong> na lista para preencher
+              leitura, doutrina e exercício.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form
-              onSubmit={criarNovaSemana}
+              onSubmit={criarNovaEtapa}
               className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end"
             >
               <div className="min-w-[200px] flex-1 space-y-2">
@@ -342,7 +342,7 @@ export function TerapeutaPage() {
                 </select>
               </div>
               <div className="w-24 space-y-2">
-                <Label htmlFor="novo-num">Semana (1–12)</Label>
+                <Label htmlFor="novo-num">Etapa (1–12)</Label>
                 <Input
                   id="novo-num"
                   type="number"
@@ -358,7 +358,7 @@ export function TerapeutaPage() {
                   id="novo-titulo"
                   value={newTitulo}
                   onChange={(ev) => setNewTitulo(ev.target.value)}
-                  placeholder="Ex.: Semana 1 — Purificação inicial"
+                  placeholder="Ex.: Etapa 1 — Purificação inicial"
                 />
               </div>
               <Button
@@ -381,7 +381,7 @@ export function TerapeutaPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <BookOpen className="h-6 w-6 text-scriptorium-gold" />
-              <CardTitle>Semanas do itinerário</CardTitle>
+              <CardTitle>Etapas do itinerário</CardTitle>
             </div>
             <CardDescription>
               Campos longos aceitam <strong>Markdown</strong> (negrito, títulos,
@@ -403,7 +403,7 @@ export function TerapeutaPage() {
                   <thead className="bg-scriptorium-bg/80 text-scriptorium-gold-muted">
                     <tr>
                       <th className="p-3 font-medium">Logismoi</th>
-                      <th className="p-3 font-medium">Sem.</th>
+                      <th className="p-3 font-medium">Nº</th>
                       <th className="p-3 font-medium">Título</th>
                       <th className="p-3 font-medium" />
                     </tr>
@@ -439,7 +439,7 @@ export function TerapeutaPage() {
 
             {rows.length === 0 && !loadingList && (
               <p className="text-scriptorium-cream/60">
-                Nenhuma linha ainda. Use o bloco <strong>Nova semana</strong> acima
+                Nenhuma linha ainda. Use o bloco <strong>Nova etapa</strong> acima
                 para criar a primeira.
               </p>
             )}
@@ -450,7 +450,7 @@ export function TerapeutaPage() {
           <Card className="border-scriptorium-gold/30">
             <CardHeader>
               <CardTitle className="text-lg">
-                Editar semana {selected.numero_semana} —{" "}
+                Editar etapa {selected.numero_semana} —{" "}
                 {selected.logismoi?.nome_portugues ?? selected.logismoi_id}
               </CardTitle>
               <CardDescription className="text-scriptorium-cream/70">
@@ -463,14 +463,14 @@ export function TerapeutaPage() {
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <ClipboardPaste className="h-5 w-5 text-scriptorium-gold" />
                   <span className="font-medium text-scriptorium-gold">
-                    Colar semana inteira
+                    Colar etapa inteira
                   </span>
                 </div>
                 <p className="mb-3 text-sm text-scriptorium-cream/75">
                   Cole aqui o texto da IA. Separe cada parte com uma linha só com{" "}
                   <code className="text-scriptorium-gold">## nome_campo</code> ou{" "}
                   <code className="text-scriptorium-gold">### nome_campo</code>{" "}
-                  (nomes em inglês, iguais ao banco):{" "}
+                  (nomes das colunas no banco; <code className="text-scriptorium-gold-muted">titulo_semana</code> é o título da etapa):{" "}
                   <code className="text-xs text-scriptorium-gold-muted">
                     titulo_semana, leitura_fonte, leitura_texto, doutrina_titulo,
                     doutrina_corpo, exercicio_titulo, exercicio_descricao,
@@ -481,7 +481,7 @@ export function TerapeutaPage() {
                 <Textarea
                   value={bulkPaste}
                   onChange={(e) => setBulkPaste(e.target.value)}
-                  placeholder={`### titulo_semana\nSemana 1: título\n\n### leitura_texto\nParágrafo em **Markdown**...`}
+                  placeholder={`### titulo_semana\nEtapa 1: título\n\n### leitura_texto\nParágrafo em **Markdown**...`}
                   className="min-h-[180px] font-mono text-sm"
                 />
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -500,7 +500,7 @@ export function TerapeutaPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="titulo">Título da semana</Label>
+                <Label htmlFor="titulo">Título da etapa</Label>
                 <Input
                   id="titulo"
                   value={selected.titulo_semana}

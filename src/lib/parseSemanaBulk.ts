@@ -19,6 +19,8 @@ export type SemanaBulkKey = (typeof SEMANA_BULK_KEYS)[number];
 const ALIASES: Record<string, SemanaBulkKey> = {
   titulo: "titulo_semana",
   titulo_da_semana: "titulo_semana",
+  titulo_etapa: "titulo_semana",
+  titulo_da_etapa: "titulo_semana",
   leitura: "leitura_texto",
   fonte: "leitura_fonte",
   doutrina: "doutrina_corpo",
