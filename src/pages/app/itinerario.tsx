@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { ItinerarioDashboard } from "@/components/ItinerarioDashboard";
 import { ItinerarioUploadDiagnostico } from "@/components/ItinerarioUploadDiagnostico";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTerapeuta } from "@/hooks/useTerapeuta";
 
 export function ItinerarioAppPage() {
   const { user, loading, signOut } = useAuth();
+  const { isTerapeuta, loading: terapeutaLoading } = useTerapeuta();
 
   if (loading) {
     return (
@@ -36,6 +38,16 @@ export function ItinerarioAppPage() {
             <Button variant="outline" size="sm" asChild>
               <Link to="/">Início</Link>
             </Button>
+            {!terapeutaLoading && isTerapeuta && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-scriptorium-gold/50 text-scriptorium-gold"
+                asChild
+              >
+                <Link to="/app/terapeuta">Painel terapeuta</Link>
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

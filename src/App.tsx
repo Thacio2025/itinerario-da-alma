@@ -3,6 +3,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { HomePage } from "@/pages/index";
 import AuthPage from "@/pages/auth";
 import { ItinerarioAppPage } from "@/pages/app/itinerario";
+import { TerapeutaPage } from "@/pages/app/terapeuta";
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/app/itinerario" element={<ItinerarioAppPage />} />
+          <Route path="/app/terapeuta" element={<TerapeutaPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
