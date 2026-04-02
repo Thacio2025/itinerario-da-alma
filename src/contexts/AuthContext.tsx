@@ -64,6 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (error) throw error;
+
+    // Força redirecionar após login bem-sucedido
+    setTimeout(() => {
+      window.location.href = `${window.location.origin}/app/itinerario`;
+    }, 1000);
   }, []);
 
   const signOut = useCallback(async () => {
