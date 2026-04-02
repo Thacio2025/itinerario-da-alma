@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 type AuthContextValue = {
   user: User | null;
@@ -56,19 +56,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    if (!isSupabaseConfigured()) {
+      throw new Error(
+        "Supabase não configurado no build. No Netlify: Site → Environment variables → VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY, depois novo deploy.",
+      );
+    }
+
+    const redirectTo = `${window.location.origin}/app/itinerario`;
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/app/itinerario`,
-      },
+      options: { redirectTo },
     });
 
     if (error) throw error;
 
-    // Força redirecionar após login bem-sucedido
-    setTimeout(() => {
-      window.location.href = `${window.location.origin}/app/itinerario`;
-    }, 1000);
+    // Garante ida ao host do Supabase (se VITE_* estiver vazio, a URL vira relativa e o clique “não faz nada”)
+    if (data.url && /^https?:\/\//i.test(data.url)) {
+      window.location.assign(data.url);
+    } else if (data.url) {
+      throw new Error(
+        "URL de OAuth inválida. Confira VITE_SUPABASE_URL no Netlify e faça um novo deploy.",
+      );
+    }
   }, []);
 
   const signOut = useCallback(async () => {

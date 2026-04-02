@@ -38,17 +38,16 @@ export default function AuthPage() {
   };
 
   const handleGoogleSignIn = async () => {
-    console.log("Clicou no botão Google");
     setError("");
     setLoading(true);
 
     try {
-      console.log("Iniciando Google Sign In...");
       await signInWithGoogle();
-      console.log("Google Sign In iniciado");
-    } catch (err: any) {
-      console.error("Erro Google completo:", err);
-      setError(err.message || "Erro ao entrar com Google");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Erro ao entrar com Google";
+      setError(message);
+    } finally {
       setLoading(false);
     }
   };
@@ -103,6 +102,7 @@ export default function AuthPage() {
                 id="password"
                 type="password"
                 placeholder="••••••••"
+                autoComplete={isSignUp ? "new-password" : "current-password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-gray-900 border-gray-700 text-gray-100 mt-1"
