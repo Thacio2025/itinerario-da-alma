@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Loader2, Save } from "lucide-react";
+import { ArrowLeft, BookOpen, Loader2, Plus, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,14 +37,21 @@ type SemanaComLogismoi = SemanaRow & {
   logismoi: { nome_portugues: string } | null;
 };
 
+type LogismoiOption = { id: number; nome_portugues: string };
+
 export function TerapeutaPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { isTerapeuta, loading: roleLoading } = useTerapeuta();
   const [rows, setRows] = useState<SemanaComLogismoi[]>([]);
+  const [logismoiList, setLogismoiList] = useState<LogismoiOption[]>([]);
   const [loadingList, setLoadingList] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<SemanaComLogismoi | null>(null);
   const [saving, setSaving] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newLogismoiId, setNewLogismoiId] = useState<string>("");
+  const [newNumero, setNewNumero] = useState<string>("1");
+  const [newTitulo, setNewTitulo] = useState("");
 
   const load = useCallback(async () => {
     setLoadingList(true);
@@ -70,6 +77,60 @@ export function TerapeutaPage() {
     if (!user || !isTerapeuta) return;
     load();
   }, [user, isTerapeuta, load]);
+
+  useEffect(() => {
+    if (!user || !isTerapeuta) return;
+    (async () => {
+      const { data, error: e } = await supabase
+        .from("logismoi")
+        .select("id, nome_portugues")
+        .order("id");
+      if (!e && data) setLogismoiList(data as LogismoiOption[]);
+    })();
+  }, [user, isTerapeuta]);
+
+  async function criarNovaSemana(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const lid = Number(newLogismoiId);
+    const n = Number(newNumero);
+    const titulo = newTitulo.trim();
+    if (!lid || Number.isNaN(lid)) {
+      setError("Escolha um logismoi.");
+      return;
+    }
+    if (Number.isNaN(n) || n < 1 || n > 12) {
+      setError("Número da semana deve ser entre 1 e 12.");
+      return;
+    }
+    if (!titulo) {
+      setError("Informe o título da semana.");
+      return;
+    }
+    setCreating(true);
+    const { error: insErr } = await supabase.from("itinerario_semanas").insert({
+      logismoi_id: lid,
+      numero_semana: n,
+      titulo_semana: titulo,
+    });
+    setCreating(false);
+    if (insErr) {
+      if (
+        insErr.message.includes("duplicate") ||
+        insErr.code === "23505"
+      ) {
+        setError(
+          "Já existe uma semana com esse número para esse logismoi. Escolha outro número ou edite a linha existente.",
+        );
+      } else {
+        setError(insErr.message);
+      }
+      return;
+    }
+    setNewTitulo("");
+    setNewNumero("1");
+    await load();
+  }
 
   async function save() {
     if (!selected) return;
@@ -164,6 +225,75 @@ export function TerapeutaPage() {
           </div>
         </header>
 
+        <Card className="border-scriptorium-gold/25">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Plus className="h-6 w-6 text-scriptorium-gold" />
+              <CardTitle>Nova semana</CardTitle>
+            </div>
+            <CardDescription>
+              Cria uma linha em <code className="text-scriptorium-gold">itinerario_semanas</code>
+              . Depois use <strong>Editar</strong> na lista para preencher leitura, doutrina e
+              exercício.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={criarNovaSemana}
+              className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end"
+            >
+              <div className="min-w-[200px] flex-1 space-y-2">
+                <Label htmlFor="novo-logismoi">Logismoi</Label>
+                <select
+                  id="novo-logismoi"
+                  value={newLogismoiId}
+                  onChange={(ev) => setNewLogismoiId(ev.target.value)}
+                  className="flex h-10 w-full rounded-md border border-scriptorium-border bg-scriptorium-bg px-3 py-2 text-sm text-scriptorium-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scriptorium-gold focus-visible:ring-offset-2 focus-visible:ring-offset-scriptorium-bg"
+                >
+                  <option value="">Selecione…</option>
+                  {logismoiList.map((l) => (
+                    <option key={l.id} value={String(l.id)}>
+                      {l.nome_portugues}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="w-24 space-y-2">
+                <Label htmlFor="novo-num">Semana (1–12)</Label>
+                <Input
+                  id="novo-num"
+                  type="number"
+                  min={1}
+                  max={12}
+                  value={newNumero}
+                  onChange={(ev) => setNewNumero(ev.target.value)}
+                />
+              </div>
+              <div className="min-w-[200px] flex-[2] space-y-2">
+                <Label htmlFor="novo-titulo">Título</Label>
+                <Input
+                  id="novo-titulo"
+                  value={newTitulo}
+                  onChange={(ev) => setNewTitulo(ev.target.value)}
+                  placeholder="Ex.: Semana 1 — Purificação inicial"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={creating}
+                className="bg-scriptorium-gold text-scriptorium-bg hover:bg-scriptorium-gold/90 sm:mb-0.5"
+              >
+                {creating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                Criar
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
         <Card className="border-scriptorium-border/80">
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -226,9 +356,8 @@ export function TerapeutaPage() {
 
             {rows.length === 0 && !loadingList && (
               <p className="text-scriptorium-cream/60">
-                Nenhuma linha em <code>itinerario_semanas</code>. Você pode
-                inserir linhas pelo SQL Editor ou pedir para evoluirmos um
-                formulário de &quot;nova semana&quot;.
+                Nenhuma linha ainda. Use o bloco <strong>Nova semana</strong> acima
+                para criar a primeira.
               </p>
             )}
           </CardContent>
