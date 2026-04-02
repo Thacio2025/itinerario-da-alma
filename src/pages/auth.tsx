@@ -1,151 +1,171 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/contexts/AuthContext";
+import { Chrome } from "lucide-react";
 
-export function AuthPage() {
+export default function AuthPage() {
   const navigate = useNavigate();
-  const { signIn, signUp, user, loading: sessionLoading } = useAuth();
+  const { signIn, signUp, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"login" | "register">("login");
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSubmitting(true);
-    const fn = mode === "login" ? signIn : signUp;
-    const { error: err } = await fn(email, password);
-    setSubmitting(false);
-    if (err) {
-      setError(err.message);
-      return;
-    }
-    navigate("/app/itinerario", { replace: true });
-  }
+    setError("");
+    setLoading(true);
 
-  if (!sessionLoading && user) {
-    return <Navigate to="/app/itinerario" replace />;
-  }
+    try {
+      if (isSignUp) {
+        const { error: err } = await signUp(email, password);
+        if (err) throw err;
+      } else {
+        const { error: err } = await signIn(email, password);
+        if (err) throw err;
+      }
+      navigate("/app/itinerario");
+    } catch (err: any) {
+      setError(err.message || "Erro na autenticação");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setLoading(true);
+
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      setError(err.message || "Erro ao entrar com Google");
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <Link
-        to="/"
-        className="mb-8 flex items-center gap-2 text-scriptorium-gold transition-opacity hover:opacity-90"
-      >
-        <Sparkles className="h-6 w-6" />
-        <span className="text-lg font-semibold">Itinerário da Alma</span>
-      </Link>
-
-      <Card className="w-full max-w-md border-scriptorium-border/90">
-        <CardHeader>
-          <CardTitle className="text-2xl">
-            {mode === "login" ? "Entrar" : "Criar conta"}
+    <div
+      style={{ backgroundColor: "#1A1610", minHeight: "100vh" }}
+      className="flex items-center justify-center p-4"
+    >
+      <Card className="w-full max-w-md border-0" style={{ backgroundColor: "#2A2A2A" }}>
+        <CardHeader className="text-center">
+          <div style={{ color: "#A8956E" }} className="text-3xl mb-4">
+            ✨ Itinerário da Alma
+          </div>
+          <CardTitle style={{ color: "#A8956E" }}>
+            {isSignUp ? "Criar Conta" : "Entrar"}
           </CardTitle>
-          <CardDescription>
-            Use o e-mail cadastrado no Supabase Auth. Em desenvolvimento,
-            confirme as variáveis{" "}
-            <code className="text-scriptorium-gold">VITE_SUPABASE_*</code>.
-          </CardDescription>
+          <CardDescription>Use o e-mail cadastrado no Supabase Auth.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+
+        <CardContent className="space-y-6">
+          {error && (
+            <div
+              style={{ backgroundColor: "#C1121F", color: "#fff" }}
+              className="p-3 rounded text-sm"
+            >
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleEmailAuth} className="space-y-4">
+            <div>
+              <Label style={{ color: "#A8956E" }} htmlFor="email">
+                E-mail
+              </Label>
               <Input
                 id="email"
                 type="email"
-                autoComplete="email"
-                required
+                placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="voce@exemplo.com"
+                className="bg-gray-900 border-gray-700 text-gray-100 mt-1"
+                required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+
+            <div>
+              <Label style={{ color: "#A8956E" }} htmlFor="password">
+                Senha
+              </Label>
               <Input
                 id="password"
                 type="password"
-                autoComplete={
-                  mode === "login" ? "current-password" : "new-password"
-                }
-                required
-                minLength={6}
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="bg-gray-900 border-gray-700 text-gray-100 mt-1"
+                required
               />
             </div>
 
-            {error && (
-              <p className="rounded-md border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-red-200">
-                {error}
-              </p>
-            )}
-
             <Button
               type="submit"
-              className="w-full bg-scriptorium-gold text-scriptorium-bg hover:bg-scriptorium-gold/90"
-              disabled={submitting || sessionLoading}
+              disabled={loading}
+              className="w-full h-10 font-semibold"
+              style={{ backgroundColor: "#A8956E", color: "#1A1610" }}
             >
-              {submitting
-                ? "Aguarde…"
-                : mode === "login"
-                  ? "Entrar"
-                  : "Cadastrar"}
+              {loading ? "Processando..." : isSignUp ? "Criar Conta" : "Entrar"}
             </Button>
-
-            <p className="text-center text-sm text-scriptorium-cream/60">
-              {mode === "login" ? (
-                <>
-                  Não tem conta?{" "}
-                  <button
-                    type="button"
-                    className="text-scriptorium-gold underline-offset-4 hover:underline"
-                    onClick={() => {
-                      setMode("register");
-                      setError(null);
-                    }}
-                  >
-                    Registrar
-                  </button>
-                </>
-              ) : (
-                <>
-                  Já tem conta?{" "}
-                  <button
-                    type="button"
-                    className="text-scriptorium-gold underline-offset-4 hover:underline"
-                    onClick={() => {
-                      setMode("login");
-                      setError(null);
-                    }}
-                  >
-                    Entrar
-                  </button>
-                </>
-              )}
-            </p>
           </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span style={{ color: "#666", backgroundColor: "#2A2A2A" }} className="px-2">
+                ou
+              </span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full h-10 font-semibold flex items-center justify-center gap-2"
+            style={{
+              backgroundColor: "#fff",
+              color: "#1A1A1A",
+            }}
+          >
+            <Chrome size={18} />
+            Entrar com Google
+          </Button>
+
+          <div className="text-center">
+            <span style={{ color: "#999" }}>
+              {isSignUp ? "Já tem conta? " : "Não tem conta? "}
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                style={{ color: "#A8956E" }}
+                className="font-semibold hover:underline"
+              >
+                {isSignUp ? "Entrar" : "Registrar"}
+              </button>
+            </span>
+          </div>
+
+          <Button
+            type="button"
+            onClick={() => navigate("/")}
+            variant="ghost"
+            className="w-full"
+            style={{ color: "#A8956E" }}
+          >
+            ← Voltar ao início
+          </Button>
         </CardContent>
       </Card>
-
-      <Button variant="ghost" className="mt-8" asChild>
-        <Link to="/">← Voltar ao início</Link>
-      </Button>
     </div>
   );
 }
