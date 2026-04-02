@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { MarkdownField } from "@/components/MarkdownField";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTerapeuta } from "@/hooks/useTerapeuta";
 import { supabase } from "@/lib/supabase";
@@ -301,8 +301,8 @@ export function TerapeutaPage() {
               <CardTitle>Semanas do itinerário</CardTitle>
             </div>
             <CardDescription>
-              Edite cada linha (textos públicos lidos pelos participantes). Use a
-              lista abaixo e o formulário ao escolher uma semana.
+              Campos longos aceitam <strong>Markdown</strong> (negrito, títulos,
+              listas). Use <strong>Pré-visualizar</strong> antes de salvar.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -371,7 +371,8 @@ export function TerapeutaPage() {
                 {selected.logismoi?.nome_portugues ?? selected.logismoi_id}
               </CardTitle>
               <CardDescription className="text-scriptorium-cream/70">
-                id {selected.id} · salva alterações no Supabase
+                id {selected.id} · Markdown nos blocos indicados · salva no
+                Supabase
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -395,16 +396,12 @@ export function TerapeutaPage() {
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="leitura_texto">Leitura — texto</Label>
-                <Textarea
-                  id="leitura_texto"
-                  value={selected.leitura_texto ?? ""}
-                  onChange={(e) =>
-                    setSelected({ ...selected, leitura_texto: e.target.value })
-                  }
-                />
-              </div>
+              <MarkdownField
+                id="leitura_texto"
+                label="Leitura — texto"
+                value={selected.leitura_texto ?? ""}
+                onChange={(v) => setSelected({ ...selected, leitura_texto: v })}
+              />
               <div className="space-y-2">
                 <Label htmlFor="doutrina_titulo">Doutrina — título</Label>
                 <Input
@@ -415,16 +412,12 @@ export function TerapeutaPage() {
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="doutrina_corpo">Doutrina — corpo</Label>
-                <Textarea
-                  id="doutrina_corpo"
-                  value={selected.doutrina_corpo ?? ""}
-                  onChange={(e) =>
-                    setSelected({ ...selected, doutrina_corpo: e.target.value })
-                  }
-                />
-              </div>
+              <MarkdownField
+                id="doutrina_corpo"
+                label="Doutrina — corpo"
+                value={selected.doutrina_corpo ?? ""}
+                onChange={(v) => setSelected({ ...selected, doutrina_corpo: v })}
+              />
               <div className="space-y-2">
                 <Label htmlFor="exercicio_titulo">Exercício — título</Label>
                 <Input
@@ -438,19 +431,14 @@ export function TerapeutaPage() {
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="exercicio_descricao">Exercício — descrição</Label>
-                <Textarea
-                  id="exercicio_descricao"
-                  value={selected.exercicio_descricao ?? ""}
-                  onChange={(e) =>
-                    setSelected({
-                      ...selected,
-                      exercicio_descricao: e.target.value,
-                    })
-                  }
-                />
-              </div>
+              <MarkdownField
+                id="exercicio_descricao"
+                label="Exercício — descrição"
+                value={selected.exercicio_descricao ?? ""}
+                onChange={(v) =>
+                  setSelected({ ...selected, exercicio_descricao: v })
+                }
+              />
               <div className="space-y-2">
                 <Label htmlFor="sinal_titulo">Sinal de progresso — título</Label>
                 <Input
@@ -464,19 +452,14 @@ export function TerapeutaPage() {
                   }
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="sinal_desc">Sinal de progresso — descrição</Label>
-                <Textarea
-                  id="sinal_desc"
-                  value={selected.sinal_progresso_descricao ?? ""}
-                  onChange={(e) =>
-                    setSelected({
-                      ...selected,
-                      sinal_progresso_descricao: e.target.value,
-                    })
-                  }
-                />
-              </div>
+              <MarkdownField
+                id="sinal_desc"
+                label="Sinal de progresso — descrição"
+                value={selected.sinal_progresso_descricao ?? ""}
+                onChange={(v) =>
+                  setSelected({ ...selected, sinal_progresso_descricao: v })
+                }
+              />
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="tipo_fase">Tipo de fase</Label>
