@@ -38,8 +38,10 @@ export function HomePage() {
           <span className="text-scriptorium-gold">atenção sagrada</span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-scriptorium-cream/75 md:text-xl">
-          Acompanhe etapas, envie seu diagnóstico e construa um itinerário
-          personalizado — com segurança e presença.
+          Depois do diagnóstico da alma, caminhe em{" "}
+          <span className="text-scriptorium-cream/90">12 etapas</span> contra o
+          logismoi dominante — leitura, doutrina e exercícios, ao seu ritmo, com
+          o progresso na sua conta.
         </p>
 
         <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row">
@@ -72,7 +74,7 @@ export function HomePage() {
               </span>
               <span>
                 <strong className="text-scriptorium-cream">Crie sua conta</strong>{" "}
-                com e-mail e senha (Supabase Auth).
+                com e-mail e senha para acessar a área autenticada do itinerário.
               </span>
             </li>
             <li className="flex gap-4">
@@ -80,8 +82,25 @@ export function HomePage() {
                 2
               </span>
               <span>
-                <strong className="text-scriptorium-cream">Envie o diagnóstico</strong>{" "}
-                em PDF ou imagem para iniciar o mapeamento.
+                <strong className="text-scriptorium-cream">
+                  Faça o diagnóstico da alma
+                </strong>{" "}
+                em{" "}
+                <a
+                  href="https://diagnosticoespiritual.com.br/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-scriptorium-gold underline-offset-4 hover:underline"
+                >
+                  diagnosticoespiritual.com.br
+                </a>
+                . Depois, aqui no app,{" "}
+                <strong className="text-scriptorium-cream">
+                  escolha o logismoi
+                </strong>{" "}
+                do seu percurso: um itinerário em{" "}
+                <strong className="text-scriptorium-cream">12 etapas</strong>{" "}
+                para lutar contra o eixo dominante indicado no exame.
               </span>
             </li>
             <li className="flex gap-4">
@@ -89,8 +108,14 @@ export function HomePage() {
                 3
               </span>
               <span>
-                <strong className="text-scriptorium-cream">Acompanhe o painel</strong>{" "}
-                com as fases do seu itinerário espiritual.
+                <strong className="text-scriptorium-cream">
+                  Acompanhe o painel
+                </strong>
+                : abra cada etapa para ler o texto completo e{" "}
+                <strong className="text-scriptorium-cream">
+                  marque como lida
+                </strong>{" "}
+                quando terminar — o registro fica salvo na sua conta.
               </span>
             </li>
           </ol>

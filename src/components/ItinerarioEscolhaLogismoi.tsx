@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, ExternalLink, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -30,21 +30,9 @@ export function ItinerarioEscolhaLogismoi({
   const { items, loading: loadingLista, error: erroLista } = useLogismoiOpcoes();
   const [selectedId, setSelectedId] = useState<number>(1);
   const [inputValue, setInputValue] = useState("");
-  const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveOk, setSaveOk] = useState(false);
-  const boxRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
-      if (boxRef.current && !boxRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
 
   useEffect(() => {
     if (logismoiIdAtual != null && items.length > 0) {
@@ -80,7 +68,6 @@ export function ItinerarioEscolhaLogismoi({
   const selecionar = (l: LogismoiOpcao) => {
     setSelectedId(l.id);
     setInputValue(labelLogismoi(l));
-    setOpen(false);
     setSaveOk(false);
     setSaveError(null);
   };
@@ -102,7 +89,7 @@ export function ItinerarioEscolhaLogismoi({
   return (
     <Card
       className={cn(
-        "overflow-hidden rounded-2xl border-white/10 bg-gradient-to-b from-white/[0.06] to-black/20 shadow-card-lift backdrop-blur-md",
+        "overflow-visible rounded-2xl border-white/10 bg-gradient-to-b from-white/[0.06] to-black/20 shadow-card-lift backdrop-blur-md",
         className,
       )}
     >
@@ -153,13 +140,17 @@ export function ItinerarioEscolhaLogismoi({
           </p>
         )}
         {!loadingLista && items.length > 0 && (
-          <div ref={boxRef} className="relative space-y-2">
+          <div className="space-y-3">
             <label
               htmlFor="busca-logismoi"
               className="text-sm font-medium text-scriptorium-cream/85"
             >
               Buscar e selecionar o logismoi
             </label>
+            <p className="text-xs text-scriptorium-cream/55">
+              A lista completa aparece abaixo. Use o campo para filtrar por
+              nome.
+            </p>
             <div className="relative">
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-scriptorium-gold-muted"
@@ -172,19 +163,18 @@ export function ItinerarioEscolhaLogismoi({
                 value={inputValue}
                 onChange={(e) => {
                   setInputValue(e.target.value);
-                  setOpen(true);
                   setSaveOk(false);
                   setSaveError(null);
                 }}
-                onFocus={() => setOpen(true)}
-                placeholder="Digite para filtrar (ex.: Ira, Luxúria, Orgê…)"
+                placeholder="Filtrar a lista (ex.: Ira, Luxúria, Orgê…)"
                 className="w-full rounded-xl border border-white/15 bg-black/35 py-3 pl-10 pr-4 text-sm text-scriptorium-cream placeholder:text-scriptorium-cream/40 outline-none ring-scriptorium-gold/30 transition-shadow focus:border-scriptorium-gold/40 focus:ring-2"
               />
             </div>
-            {open && filtered.length > 0 && (
+            {filtered.length > 0 ? (
               <ul
-                className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-white/10 bg-[#14110d] py-1 shadow-2xl shadow-black/60 ring-1 ring-white/5"
+                className="max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-[#14110d] py-1 shadow-inner ring-1 ring-white/5"
                 role="listbox"
+                aria-label="Lista de logismoi"
               >
                 {filtered.map((l) => {
                   const ativo = selectedId === l.id;
@@ -216,9 +206,8 @@ export function ItinerarioEscolhaLogismoi({
                   );
                 })}
               </ul>
-            )}
-            {open && filtered.length === 0 && inputValue.trim() !== "" && (
-              <p className="absolute z-30 mt-1 w-full rounded-xl border border-white/10 bg-[#14110d] px-3 py-3 text-sm text-scriptorium-cream/60 shadow-xl">
+            ) : (
+              <p className="rounded-xl border border-white/10 bg-[#14110d] px-3 py-3 text-sm text-scriptorium-cream/60">
                 Nenhum logismoi corresponde à busca.
               </p>
             )}
