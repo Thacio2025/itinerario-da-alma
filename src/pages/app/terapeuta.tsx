@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   BookOpen,
   ClipboardPaste,
+  Layers,
   Loader2,
   Plus,
   Save,
@@ -22,6 +23,8 @@ import { MarkdownField } from "@/components/MarkdownField";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTerapeuta } from "@/hooks/useTerapeuta";
 import {
+  buildItinerarioSemanaUpsertPayload,
+  parseMultiEtapasDocument,
   parseOrdemAparicao,
   parseSemanaBulkPaste,
   SEMANA_BULK_KEYS,
@@ -67,6 +70,10 @@ export function TerapeutaPage() {
   const [newTitulo, setNewTitulo] = useState("");
   const [bulkPaste, setBulkPaste] = useState("");
   const [bulkHint, setBulkHint] = useState<string | null>(null);
+  const [multiImportLogismoiId, setMultiImportLogismoiId] = useState("");
+  const [multiImportText, setMultiImportText] = useState("");
+  const [multiImportHint, setMultiImportHint] = useState<string | null>(null);
+  const [importingMany, setImportingMany] = useState(false);
 
   const load = useCallback(async () => {
     setLoadingList(true);
@@ -245,6 +252,71 @@ export function TerapeutaPage() {
     await load();
   }
 
+  async function importarMultiplasEtapas() {
+    setError(null);
+    setMultiImportHint(null);
+    const lid = Number(multiImportLogismoiId);
+    if (!lid || Number.isNaN(lid)) {
+      setError("Importação em massa: escolha um logismoi.");
+      return;
+    }
+    const parsed = parseMultiEtapasDocument(multiImportText);
+    if (parsed.etapas.length === 0) {
+      const msg = [...parsed.errors, ...parsed.warnings].filter(Boolean).join(" · ");
+      setMultiImportHint(msg || "Nada para importar.");
+      return;
+    }
+
+    setImportingMany(true);
+    let ok = 0;
+    const falhas: string[] = [];
+    for (const e of parsed.etapas) {
+      const payload = buildItinerarioSemanaUpsertPayload(
+        lid,
+        e.numeroEtapa,
+        e.fields,
+      );
+      if (!payload) {
+        falhas.push(`Etapa ${e.numeroEtapa}: falta titulo_semana`);
+        continue;
+      }
+      payload.updated_at = new Date().toISOString();
+
+      const { data: existing } = await supabase
+        .from("itinerario_semanas")
+        .select("id")
+        .eq("logismoi_id", lid)
+        .eq("numero_semana", e.numeroEtapa)
+        .maybeSingle();
+
+      if (existing?.id) {
+        const { error: uErr } = await supabase
+          .from("itinerario_semanas")
+          .update(payload)
+          .eq("id", existing.id);
+        if (uErr) falhas.push(`Etapa ${e.numeroEtapa}: ${uErr.message}`);
+        else ok++;
+      } else {
+        const { error: iErr } = await supabase
+          .from("itinerario_semanas")
+          .insert(payload);
+        if (iErr) falhas.push(`Etapa ${e.numeroEtapa}: ${iErr.message}`);
+        else ok++;
+      }
+    }
+
+    setImportingMany(false);
+    await load();
+
+    const partes: string[] = [
+      `Concluído: ${ok} etapa(s) criada(s) ou atualizada(s) para este logismoi.`,
+    ];
+    if (parsed.warnings.length) partes.push(parsed.warnings.join(" "));
+    if (parsed.errors.length) partes.push(`Avisos de conteúdo: ${parsed.errors.join(" ")}`);
+    if (falhas.length) partes.push(`Erros ao salvar: ${falhas.join("; ")}`);
+    setMultiImportHint(partes.join(" · "));
+  }
+
   if (authLoading || roleLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-scriptorium-cream/70">
@@ -374,6 +446,66 @@ export function TerapeutaPage() {
                 Criar
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card className="border-scriptorium-gold/20">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Layers className="h-6 w-6 text-scriptorium-gold" />
+              <CardTitle>Importar várias etapas de uma vez</CardTitle>
+            </div>
+            <CardDescription>
+              Cole o texto completo gerado pela IA: cada etapa deve começar com uma linha{" "}
+              <code className="text-scriptorium-gold">## Etapa 1</code>,{" "}
+              <code className="text-scriptorium-gold">## Etapa 2</code>, … até 12, e em seguida os
+              campos <code className="text-scriptorium-gold-muted">### titulo_semana</code>, etc.
+              (como no prompt da Gula). Linhas antes do primeiro{" "}
+              <code className="text-scriptorium-gold">## Etapa</code> são ignoradas. Etapas já
+              existentes para o mesmo logismoi são <strong>atualizadas</strong>.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="max-w-md space-y-2">
+              <Label htmlFor="multi-logismoi">Logismoi deste módulo</Label>
+              <select
+                id="multi-logismoi"
+                value={multiImportLogismoiId}
+                onChange={(ev) => setMultiImportLogismoiId(ev.target.value)}
+                className="flex h-10 w-full rounded-md border border-scriptorium-border bg-scriptorium-bg px-3 py-2 text-sm text-scriptorium-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scriptorium-gold focus-visible:ring-offset-2 focus-visible:ring-offset-scriptorium-bg"
+              >
+                <option value="">Selecione…</option>
+                {logismoiList.map((l) => (
+                  <option key={l.id} value={String(l.id)}>
+                    {l.nome_portugues}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Textarea
+              value={multiImportText}
+              onChange={(e) => setMultiImportText(e.target.value)}
+              placeholder={`# Módulo (opcional — será ignorado)\n\n## Etapa 1\n### titulo_semana\nTítulo da primeira etapa\n### leitura_texto\n...\n\n## Etapa 2\n### titulo_semana\n...`}
+              className="min-h-[220px] font-mono text-sm"
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                className="bg-scriptorium-gold text-scriptorium-bg hover:bg-scriptorium-gold/90"
+                disabled={importingMany}
+                onClick={() => importarMultiplasEtapas()}
+              >
+                {importingMany ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Layers className="h-4 w-4" />
+                )}
+                Importar etapas
+              </Button>
+            </div>
+            {multiImportHint && (
+              <p className="text-sm text-scriptorium-cream/80">{multiImportHint}</p>
+            )}
           </CardContent>
         </Card>
 

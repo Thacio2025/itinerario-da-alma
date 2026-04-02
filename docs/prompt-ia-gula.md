@@ -58,9 +58,11 @@ Observações opcionais do terapeuta (se não houver, escreva “nenhuma”): [E
 
 ## Como usar depois que a IA responder
 
-1. **No painel Terapeuta:** para cada etapa, use **Nova etapa** → Logismoi **Gula**, número **1…12**, título = o texto de `### titulo_semana` daquela etapa → **Criar**.
-2. Abra **Editar**. No bloco **Colar etapa inteira**, cole o trecho daquela etapa (do `### titulo_semana` até `### ordem_aparicao`, inclusive os cabeçalhos `##` ou `###` com o nome do campo). Cabeçalhos como `## Etapa 3` são só organização; o painel pode listá-los como ignorados ao aplicar — o importante são os `### titulo_semana`, etc. Clique em **Aplicar ao formulário** — o sistema preenche os campos automaticamente. Revise e use **Pré-visualizar** nos blocos Markdown antes de **Salvar**.
-3. Alternativa: copiar campo a campo manualmente, como antes.
+**Forma mais rápida:** no painel **Terapeuta**, abra **Importar várias etapas de uma vez**, escolha o logismoi **Gula**, cole o documento inteiro (do `# Módulo Gula` até a última etapa) e clique em **Importar etapas**. O sistema separa por `## Etapa 1` … `## Etapa 12` e grava tudo no Supabase (etapas já existentes são atualizadas).
+
+**Alternativa etapa a etapa:** use **Nova etapa** → Logismoi **Gula**, número **1…12**, título = o texto de `### titulo_semana` → **Criar**; depois **Editar** e o bloco **Colar etapa inteira** → **Aplicar ao formulário** → **Salvar**.
+
+Ou copie campo a campo manualmente.
 
 ---
 

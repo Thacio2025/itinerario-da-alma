@@ -59,6 +59,13 @@ Observações opcionais do terapeuta: [EX.: ênfase em silêncio, confissão, ca
 
 ## Como colar no painel
 
+### Várias etapas de uma vez (recomendado para módulos inteiros)
+
+1. Gere o texto com a IA no formato `## Etapa 1` … `## Etapa 12` (como no prompt da Gula).
+2. No painel **Terapeuta**, use o bloco **Importar várias etapas de uma vez**: escolha o logismoi, cole o texto completo e clique em **Importar etapas**. O sistema cria ou atualiza cada etapa (1–12) no Supabase. Linhas antes do primeiro `## Etapa` (ex.: título do módulo) são ignoradas.
+
+### Uma etapa por vez
+
 1. Gere o texto com a IA (saída em Markdown).
 2. No painel **Terapeuta** → **Editar** a etapa correspondente, use o bloco **Colar etapa inteira**: cole o documento inteiro (cada seção deve começar com uma linha só com `## nome_do_campo` ou `### nome_do_campo`, ex.: `## titulo_semana`, `## leitura_texto`, …). Clique em **Aplicar ao formulário** para preencher todos os campos de uma vez.
 3. Revise os campos; nos blocos longos use **Pré-visualizar** e depois **Salvar**.
