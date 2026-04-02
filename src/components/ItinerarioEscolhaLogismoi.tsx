@@ -1,21 +1,19 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { LogismoiGlyph } from "@/lib/logismoiLucideIcons";
 import { useLogismoiOpcoes } from "@/hooks/useLogismoiOpcoes";
 import { salvarPercursoLogismoi } from "@/lib/percursoUsuario";
 
 type ItinerarioEscolhaLogismoiProps = {
-  /** Logismoi do percurso já guardado (para pré-selecionar). */
   logismoiIdAtual?: number | null;
-  /** Enquanto true, não aplica o logismoi padrão (evita flash antes de saber se já há percurso). */
   itinerarioLoading?: boolean;
   onPercursoSalvo?: () => void;
   className?: string;
@@ -62,22 +60,22 @@ export function ItinerarioEscolhaLogismoi({
 
   return (
     <Card
-      className={cn("overflow-hidden border-scriptorium-border/80", className)}
+      className={cn(
+        "overflow-hidden rounded-2xl border-white/10 bg-gradient-to-b from-white/[0.06] to-black/20 shadow-card-lift backdrop-blur-md",
+        className,
+      )}
     >
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-scriptorium-gold" aria-hidden />
-          <CardTitle className="text-xl md:text-2xl">
-            Seu percurso
-          </CardTitle>
-        </div>
-        <CardDescription>
-          Escolha o logismoi em que deseja caminhar neste itinerário. Pode
-          alterar mais tarde; o conteúdo das semanas vem da base de dados
-          (cadastrado pelo terapeuta para cada logismoi no Supabase).
+      <CardHeader className="space-y-3 border-b border-white/[0.06] pb-8">
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-scriptorium-cream md:text-3xl">
+          Seu percurso
+        </h2>
+        <CardDescription className="max-w-2xl text-base leading-relaxed text-scriptorium-cream/75">
+          Os oito logismoi tradicionais mapeiam movimentos da alma. Escolha em
+          qual deles deseja aprofundar este itinerário — pode alterar depois. O
+          conteúdo das etapas é definido pelo terapeuta na base de dados.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-8 pt-8">
         {loadingLista && (
           <div className="flex items-center gap-2 text-scriptorium-cream/60">
             <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
@@ -91,7 +89,7 @@ export function ItinerarioEscolhaLogismoi({
         )}
         {!loadingLista && items.length > 0 && (
           <div
-            className="grid gap-2 sm:grid-cols-2"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
             role="radiogroup"
             aria-label="Logismoi do percurso"
           >
@@ -109,27 +107,36 @@ export function ItinerarioEscolhaLogismoi({
                     setSaveError(null);
                   }}
                   className={cn(
-                    "flex w-full flex-col items-start gap-1 rounded-lg border px-3 py-3 text-left transition-colors",
+                    "flex w-full flex-col gap-3 rounded-xl border px-4 py-4 text-left transition-all duration-200",
                     selected
-                      ? "border-scriptorium-gold bg-scriptorium-gold/10 ring-1 ring-scriptorium-gold/50"
-                      : "border-scriptorium-border bg-scriptorium-bg/40 hover:border-scriptorium-gold-muted",
+                      ? "border-scriptorium-gold/45 bg-scriptorium-gold/[0.09] shadow-gold-glow ring-1 ring-scriptorium-gold/25"
+                      : "border-white/10 bg-black/25 hover:border-scriptorium-gold-muted/40 hover:bg-white/[0.03]",
                   )}
                 >
-                  <span className="flex items-center gap-2 font-medium text-scriptorium-cream">
-                    {l.icone && (
-                      <span className="text-lg leading-none" aria-hidden>
-                        {l.icone}
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border transition-colors",
+                        selected
+                          ? "border-scriptorium-gold/40 bg-scriptorium-gold/15 text-scriptorium-gold"
+                          : "border-white/10 bg-black/40 text-scriptorium-gold/90",
+                      )}
+                    >
+                      <LogismoiGlyph logismoiId={l.id} className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="block font-display text-lg font-semibold leading-tight text-scriptorium-cream">
+                        {l.nome_portugues}
                       </span>
-                    )}
-                    {l.nome_portugues}
-                  </span>
-                  <span className="text-xs text-scriptorium-cream/55">
-                    {l.nome_grego}
-                  </span>
+                      <span className="mt-0.5 block text-xs font-medium uppercase tracking-wide text-scriptorium-gold-muted/90">
+                        {l.nome_grego}
+                      </span>
+                    </div>
+                  </div>
                   {l.descricao_breve && (
-                    <span className="text-xs text-scriptorium-cream/65 line-clamp-2">
+                    <p className="line-clamp-2 text-xs leading-relaxed text-scriptorium-cream/60">
                       {l.descricao_breve}
-                    </span>
+                    </p>
                   )}
                 </button>
               );
@@ -137,12 +144,11 @@ export function ItinerarioEscolhaLogismoi({
           </div>
         )}
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 border-t border-white/[0.06] pt-6 sm:flex-row sm:items-center sm:justify-between">
           <Button
             type="button"
-            variant="outline"
-            size="sm"
-            className="border-scriptorium-gold/40 text-scriptorium-gold"
+            size="lg"
+            className="min-w-[200px] bg-scriptorium-gold font-semibold text-scriptorium-bg shadow-lg shadow-black/40 hover:bg-scriptorium-gold/92"
             disabled={submitting || loadingLista || items.length === 0}
             onClick={() => void onSalvar()}
           >
