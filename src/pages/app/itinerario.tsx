@@ -17,9 +17,12 @@ export function ItinerarioAppPage() {
   const {
     percurso,
     semanas,
+    semanasLidas,
     loading: itinerarioLoading,
     error: itinerarioError,
     refetch: refetchItinerario,
+    marcarSemanaLida,
+    marcandoSemana,
   } = useUsuarioItinerario();
   const heroPhoto = useOptionalPublicImage(HERO_BG_FILE);
 
@@ -118,8 +121,11 @@ export function ItinerarioAppPage() {
           userEmail={user.email}
           percurso={percurso}
           semanas={semanas}
+          semanasLidas={semanasLidas}
           loading={itinerarioLoading}
           fetchError={itinerarioError}
+          onMarcarSemanaLida={marcarSemanaLida}
+          marcandoSemana={marcandoSemana}
         />
       </div>
     </div>

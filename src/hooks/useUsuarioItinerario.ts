@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { marcarSemanaComoLida } from "@/lib/semanaProgresso";
 
 export type LogismoiResumo = {
   nome_portugues: string;
@@ -20,22 +21,31 @@ export type PercursoUsuario = {
 export type SemanaItinerarioRow = {
   numero_semana: number;
   titulo_semana: string;
+  tipo_fase: string | null;
+  leitura_fonte: string | null;
+  leitura_texto: string | null;
+  doutrina_titulo: string | null;
+  doutrina_corpo: string | null;
   exercicio_titulo: string | null;
   exercicio_descricao: string | null;
-  tipo_fase: string | null;
+  sinal_progresso_titulo: string | null;
+  sinal_progresso_descricao: string | null;
 };
 
 export function useUsuarioItinerario() {
   const { user, loading: authLoading } = useAuth();
   const [percurso, setPercurso] = useState<PercursoUsuario | null>(null);
   const [semanas, setSemanas] = useState<SemanaItinerarioRow[]>([]);
+  const [semanasLidas, setSemanasLidas] = useState<Record<number, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [marcandoSemana, setMarcandoSemana] = useState<number | null>(null);
 
   const refetch = useCallback(async () => {
     if (!isSupabaseConfigured() || !user) {
       setPercurso(null);
       setSemanas([]);
+      setSemanasLidas({});
       setError(null);
       setLoading(false);
       return;
@@ -63,6 +73,7 @@ export function useUsuarioItinerario() {
       setError(e1.message);
       setPercurso(null);
       setSemanas([]);
+      setSemanasLidas({});
       setLoading(false);
       return;
     }
@@ -71,6 +82,7 @@ export function useUsuarioItinerario() {
     if (!row) {
       setPercurso(null);
       setSemanas([]);
+      setSemanasLidas({});
       setLoading(false);
       return;
     }
@@ -78,8 +90,10 @@ export function useUsuarioItinerario() {
     const lm = row.logismoi as LogismoiResumo | LogismoiResumo[] | null;
     const logismoi = Array.isArray(lm) ? lm[0] ?? null : lm;
 
+    const percursoId = Number(row.id);
+
     setPercurso({
-      id: row.id,
+      id: percursoId,
       logismoi_id: row.logismoi_id,
       semana_atual: row.semana_atual,
       status: row.status,
@@ -89,7 +103,19 @@ export function useUsuarioItinerario() {
     const { data: weeks, error: e2 } = await supabase
       .from("itinerario_semanas")
       .select(
-        "numero_semana, titulo_semana, exercicio_titulo, exercicio_descricao, tipo_fase",
+        `
+        numero_semana,
+        titulo_semana,
+        tipo_fase,
+        leitura_fonte,
+        leitura_texto,
+        doutrina_titulo,
+        doutrina_corpo,
+        exercicio_titulo,
+        exercicio_descricao,
+        sinal_progresso_titulo,
+        sinal_progresso_descricao
+      `,
       )
       .eq("logismoi_id", row.logismoi_id)
       .order("numero_semana", { ascending: true })
@@ -101,13 +127,77 @@ export function useUsuarioItinerario() {
     } else {
       setSemanas((weeks as SemanaItinerarioRow[]) ?? []);
     }
+
+    const { data: prog, error: e3 } = await supabase
+      .from("usuario_semana_progresso")
+      .select("numero_semana, concluida_em, status")
+      .eq("percurso_id", percursoId);
+
+    if (e3) {
+      setError((prev) => prev ?? e3.message);
+      setSemanasLidas({});
+    } else {
+      const lidas: Record<number, boolean> = {};
+      prog?.forEach((p: { numero_semana: number; concluida_em: string | null; status: string | null }) => {
+        lidas[p.numero_semana] =
+          p.concluida_em != null || p.status === "concluida";
+      });
+      setSemanasLidas(lidas);
+    }
+
     setLoading(false);
   }, [user]);
+
+  /** Atualiza só o mapa de etapas lidas (sem ecrã de carregamento completo). */
+  const refetchProgresso = useCallback(async (percursoId: number) => {
+    if (!isSupabaseConfigured()) return;
+    const { data: prog, error: e3 } = await supabase
+      .from("usuario_semana_progresso")
+      .select("numero_semana, concluida_em, status")
+      .eq("percurso_id", percursoId);
+    if (e3) return;
+    const lidas: Record<number, boolean> = {};
+    prog?.forEach(
+      (p: {
+        numero_semana: number;
+        concluida_em: string | null;
+        status: string | null;
+      }) => {
+        lidas[p.numero_semana] =
+          p.concluida_em != null || p.status === "concluida";
+      },
+    );
+    setSemanasLidas(lidas);
+  }, []);
+
+  const marcarSemanaLida = useCallback(
+    async (numeroSemana: number): Promise<boolean> => {
+      if (!percurso) return false;
+      setMarcandoSemana(numeroSemana);
+      const result = await marcarSemanaComoLida(percurso.id, numeroSemana);
+      setMarcandoSemana(null);
+      if (result.ok) {
+        await refetchProgresso(percurso.id);
+        return true;
+      }
+      return false;
+    },
+    [percurso, refetchProgresso],
+  );
 
   useEffect(() => {
     if (authLoading) return;
     void refetch();
   }, [authLoading, refetch]);
 
-  return { percurso, semanas, loading, error, refetch };
+  return {
+    percurso,
+    semanas,
+    semanasLidas,
+    loading,
+    error,
+    refetch,
+    marcarSemanaLida,
+    marcandoSemana,
+  };
 }
