@@ -2,7 +2,7 @@ import { Link, Navigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ItinerarioDashboard } from "@/components/ItinerarioDashboard";
-import { ItinerarioUploadDiagnostico } from "@/components/ItinerarioUploadDiagnostico";
+import { ItinerarioEscolhaLogismoi } from "@/components/ItinerarioEscolhaLogismoi";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTerapeuta } from "@/hooks/useTerapeuta";
 import { useUsuarioItinerario } from "@/hooks/useUsuarioItinerario";
@@ -68,8 +68,10 @@ export function ItinerarioAppPage() {
           </div>
         </header>
 
-        <ItinerarioUploadDiagnostico
-          onProcessComplete={() => void refetchItinerario()}
+        <ItinerarioEscolhaLogismoi
+          logismoiIdAtual={percurso?.logismoi_id ?? null}
+          itinerarioLoading={itinerarioLoading}
+          onPercursoSalvo={() => void refetchItinerario()}
         />
 
         <ItinerarioDashboard

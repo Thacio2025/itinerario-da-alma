@@ -69,10 +69,15 @@ export function ItinerarioDashboard({
         </h1>
         {!temPercurso && !loading && (
           <p className="max-w-2xl text-scriptorium-cream/75">
-            Um espaço para acompanhar as etapas do caminho interior. Envie o
-            diagnóstico e use <strong className="font-medium text-scriptorium-cream/90">Processar diagnóstico</strong>{" "}
-            para criar o seu percurso no banco. As semanas exibidas aqui vêm da
-            tabela <code className="rounded bg-scriptorium-bg px-1 text-scriptorium-gold">itinerario_semanas</code>{" "}
+            Um espaço para acompanhar as etapas do caminho interior. Escolha o
+            logismoi acima e clique em{" "}
+            <strong className="font-medium text-scriptorium-cream/90">
+              Salvar percurso
+            </strong>{" "}
+            para criar o seu percurso. As semanas exibidas aqui vêm da tabela{" "}
+            <code className="rounded bg-scriptorium-bg px-1 text-scriptorium-gold">
+              itinerario_semanas
+            </code>{" "}
             (conteúdo cadastrado pelo terapeuta).
           </p>
         )}
@@ -220,7 +225,7 @@ export function ItinerarioDashboard({
           <CardDescription>
             {temPercurso
               ? "Acompanhe as semanas acima e registre reflexões ao longo do caminho. Em produção, reflexões podem ser guardadas numa tabela "
-              : "Complete o processamento do diagnóstico (botão acima) e registre reflexões ao longo das etapas. Em produção, isto pode vir de uma tabela "}
+              : "Escolha o logismoi e salve o percurso (acima), depois registre reflexões ao longo das etapas. Em produção, isto pode vir de uma tabela "}
             <code className="rounded bg-scriptorium-bg px-1 text-scriptorium-gold">
               reflexoes
             </code>{" "}

@@ -1,14 +1,23 @@
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
+const LOGISMOI_MIN = 1;
+const LOGISMOI_MAX = 8;
+
 /**
- * Registra o envio do diagnóstico: cria ou atualiza `usuario_percursos`.
- * O PDF em si não é analisado por IA neste fluxo; o logismoi inicial é
- * placeholder até o terapeuta ajustar. A URL do PDF pode ser ligada depois
- * (Storage + coluna `pdf_diagnostico_url`).
+ * Cria ou atualiza o percurso do utilizador com o logismoi escolhido.
+ * Mantém um único percurso “ativo” por utilizador (última linha atualizada).
  */
-export async function registrarDiagnosticoAposUpload(): Promise<
-  { ok: true } | { ok: false; message: string }
-> {
+export async function salvarPercursoLogismoi(
+  logismoiId: number,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (
+    !Number.isInteger(logismoiId) ||
+    logismoiId < LOGISMOI_MIN ||
+    logismoiId > LOGISMOI_MAX
+  ) {
+    return { ok: false, message: "Logismoi inválido." };
+  }
+
   if (!isSupabaseConfigured()) {
     return {
       ok: false,
@@ -41,7 +50,10 @@ export async function registrarDiagnosticoAposUpload(): Promise<
   if (existing) {
     const { error: upErr } = await supabase
       .from("usuario_percursos")
-      .update({ updated_at: new Date().toISOString() })
+      .update({
+        logismoi_id: logismoiId,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", existing.id);
     if (upErr) return { ok: false, message: upErr.message };
     return { ok: true };
@@ -49,7 +61,7 @@ export async function registrarDiagnosticoAposUpload(): Promise<
 
   const { error: insErr } = await supabase.from("usuario_percursos").insert({
     user_id: user.id,
-    logismoi_id: 1,
+    logismoi_id: logismoiId,
     status: "ativo",
   });
   if (insErr) return { ok: false, message: insErr.message };
