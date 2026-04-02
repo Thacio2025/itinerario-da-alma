@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { FileUp, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle2, FileUp, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,9 +9,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { registrarDiagnosticoAposUpload } from "@/lib/registrarDiagnostico";
 
 type ItinerarioUploadDiagnosticoProps = {
   onUploaded?: (file: File) => void;
+  /** Chamado após registro bem-sucedido no Supabase (para atualizar o painel). */
+  onProcessComplete?: () => void;
   className?: string;
 };
 
@@ -19,16 +22,21 @@ const ACCEPT = ".pdf,.doc,.docx,image/*";
 
 export function ItinerarioUploadDiagnostico({
   onUploaded,
+  onProcessComplete,
   className,
 }: ItinerarioUploadDiagnosticoProps) {
   const [drag, setDrag] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [processError, setProcessError] = useState<string | null>(null);
+  const [processOk, setProcessOk] = useState(false);
 
   const handleFile = useCallback(
     (f: File | null) => {
       if (!f) return;
       setFile(f);
+      setProcessOk(false);
+      setProcessError(null);
       onUploaded?.(f);
     },
     [onUploaded],
@@ -44,11 +52,19 @@ export function ItinerarioUploadDiagnostico({
     [handleFile],
   );
 
-  const onSimulateProcess = async () => {
+  const onProcessarDiagnostico = async () => {
     if (!file) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1200));
+    setProcessError(null);
+    setProcessOk(false);
+    const result = await registrarDiagnosticoAposUpload();
     setSubmitting(false);
+    if (!result.ok) {
+      setProcessError(result.message);
+      return;
+    }
+    setProcessOk(true);
+    onProcessComplete?.();
   };
 
   return (
@@ -61,8 +77,11 @@ export function ItinerarioUploadDiagnostico({
           </CardTitle>
         </div>
         <CardDescription>
-          Envie um PDF ou imagem do seu material para iniciar o mapeamento do
-          itinerário espiritual.
+          Envie um PDF ou imagem do seu material e clique em{" "}
+          <span className="text-scriptorium-cream/90">Processar diagnóstico</span>{" "}
+          para registrar o percurso na sua conta. A leitura automática do PDF
+          (IA) ainda não está ligada; o itinerário semanal vem das tabelas no
+          Supabase, preenchidas pelo terapeuta.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -128,7 +147,7 @@ export function ItinerarioUploadDiagnostico({
               disabled={submitting}
               onClick={(e) => {
                 e.stopPropagation();
-                onSimulateProcess();
+                void onProcessarDiagnostico();
               }}
             >
               {submitting ? (
@@ -141,6 +160,18 @@ export function ItinerarioUploadDiagnostico({
               )}
             </Button>
           </div>
+        )}
+        {processError && (
+          <p className="text-sm text-red-400/90" role="alert">
+            {processError}
+          </p>
+        )}
+        {processOk && (
+          <p className="flex items-center gap-2 text-sm text-emerald-400/90">
+            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+            Diagnóstico registrado. O painel abaixo foi atualizado com o seu
+            percurso.
+          </p>
         )}
       </CardContent>
     </Card>

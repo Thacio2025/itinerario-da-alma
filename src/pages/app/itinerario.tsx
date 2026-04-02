@@ -5,10 +5,18 @@ import { ItinerarioDashboard } from "@/components/ItinerarioDashboard";
 import { ItinerarioUploadDiagnostico } from "@/components/ItinerarioUploadDiagnostico";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTerapeuta } from "@/hooks/useTerapeuta";
+import { useUsuarioItinerario } from "@/hooks/useUsuarioItinerario";
 
 export function ItinerarioAppPage() {
   const { user, loading, signOut } = useAuth();
   const { isTerapeuta, loading: terapeutaLoading } = useTerapeuta();
+  const {
+    percurso,
+    semanas,
+    loading: itinerarioLoading,
+    error: itinerarioError,
+    refetch: refetchItinerario,
+  } = useUsuarioItinerario();
 
   if (loading) {
     return (
@@ -60,9 +68,17 @@ export function ItinerarioAppPage() {
           </div>
         </header>
 
-        <ItinerarioUploadDiagnostico />
+        <ItinerarioUploadDiagnostico
+          onProcessComplete={() => void refetchItinerario()}
+        />
 
-        <ItinerarioDashboard userEmail={user.email} />
+        <ItinerarioDashboard
+          userEmail={user.email}
+          percurso={percurso}
+          semanas={semanas}
+          loading={itinerarioLoading}
+          fetchError={itinerarioError}
+        />
       </div>
     </div>
   );
