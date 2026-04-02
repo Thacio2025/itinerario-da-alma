@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Loader2, Plus, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  ClipboardPaste,
+  Loader2,
+  Plus,
+  Save,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,7 +21,13 @@ import { Label } from "@/components/ui/label";
 import { MarkdownField } from "@/components/MarkdownField";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTerapeuta } from "@/hooks/useTerapeuta";
+import {
+  parseOrdemAparicao,
+  parseSemanaBulkPaste,
+  SEMANA_BULK_KEYS,
+} from "@/lib/parseSemanaBulk";
 import { supabase } from "@/lib/supabase";
+import { Textarea } from "@/components/ui/textarea";
 
 type SemanaRow = {
   id: number;
@@ -52,6 +65,8 @@ export function TerapeutaPage() {
   const [newLogismoiId, setNewLogismoiId] = useState<string>("");
   const [newNumero, setNewNumero] = useState<string>("1");
   const [newTitulo, setNewTitulo] = useState("");
+  const [bulkPaste, setBulkPaste] = useState("");
+  const [bulkHint, setBulkHint] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoadingList(true);
@@ -88,6 +103,74 @@ export function TerapeutaPage() {
       if (!e && data) setLogismoiList(data as LogismoiOption[]);
     })();
   }, [user, isTerapeuta]);
+
+  useEffect(() => {
+    setBulkPaste("");
+    setBulkHint(null);
+  }, [selected?.id]);
+
+  function aplicarColagemUnica() {
+    if (!selected) return;
+    setBulkHint(null);
+    const { fields, unknownHeaders } = parseSemanaBulkPaste(bulkPaste);
+    const reconhecidos = SEMANA_BULK_KEYS.filter((k) => fields[k] !== undefined);
+    if (reconhecidos.length === 0) {
+      setBulkHint(
+        "Nenhuma seção reconhecida. Cada bloco deve começar com uma linha ## ou ### e o nome do campo (ex.: ### titulo_semana).",
+      );
+      return;
+    }
+
+    setSelected((prev) => {
+      if (!prev) return prev;
+      const n = { ...prev };
+      if (fields.titulo_semana !== undefined) {
+        const t = fields.titulo_semana.trim();
+        if (t) n.titulo_semana = t;
+      }
+      if (fields.leitura_fonte !== undefined) {
+        n.leitura_fonte = fields.leitura_fonte.trim() || null;
+      }
+      if (fields.leitura_texto !== undefined) {
+        n.leitura_texto = fields.leitura_texto.trim() || null;
+      }
+      if (fields.doutrina_titulo !== undefined) {
+        n.doutrina_titulo = fields.doutrina_titulo.trim() || null;
+      }
+      if (fields.doutrina_corpo !== undefined) {
+        n.doutrina_corpo = fields.doutrina_corpo.trim() || null;
+      }
+      if (fields.exercicio_titulo !== undefined) {
+        n.exercicio_titulo = fields.exercicio_titulo.trim() || null;
+      }
+      if (fields.exercicio_descricao !== undefined) {
+        n.exercicio_descricao = fields.exercicio_descricao.trim() || null;
+      }
+      if (fields.sinal_progresso_titulo !== undefined) {
+        n.sinal_progresso_titulo = fields.sinal_progresso_titulo.trim() || null;
+      }
+      if (fields.sinal_progresso_descricao !== undefined) {
+        n.sinal_progresso_descricao =
+          fields.sinal_progresso_descricao.trim() || null;
+      }
+      if (fields.tipo_fase !== undefined) {
+        n.tipo_fase = fields.tipo_fase.trim() || null;
+      }
+      if (fields.ordem_aparicao !== undefined) {
+        n.ordem_aparicao = parseOrdemAparicao(fields.ordem_aparicao);
+      }
+      return n;
+    });
+
+    const partes = [
+      `Preenchido: ${reconhecidos.join(", ")}`,
+      unknownHeaders.length > 0
+        ? `Cabeçalhos ignorados (não são nomes de campo): ${unknownHeaders.join(", ")}`
+        : null,
+      "Revise os campos abaixo e clique em Salvar.",
+    ].filter(Boolean);
+    setBulkHint(partes.join(" · "));
+  }
 
   async function criarNovaSemana(e: React.FormEvent) {
     e.preventDefault();
@@ -376,6 +459,46 @@ export function TerapeutaPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="rounded-lg border border-scriptorium-gold/30 bg-scriptorium-bg/40 p-4">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <ClipboardPaste className="h-5 w-5 text-scriptorium-gold" />
+                  <span className="font-medium text-scriptorium-gold">
+                    Colar semana inteira
+                  </span>
+                </div>
+                <p className="mb-3 text-sm text-scriptorium-cream/75">
+                  Cole aqui o texto da IA. Separe cada parte com uma linha só com{" "}
+                  <code className="text-scriptorium-gold">## nome_campo</code> ou{" "}
+                  <code className="text-scriptorium-gold">### nome_campo</code>{" "}
+                  (nomes em inglês, iguais ao banco):{" "}
+                  <code className="text-xs text-scriptorium-gold-muted">
+                    titulo_semana, leitura_fonte, leitura_texto, doutrina_titulo,
+                    doutrina_corpo, exercicio_titulo, exercicio_descricao,
+                    sinal_progresso_titulo, sinal_progresso_descricao, tipo_fase,
+                    ordem_aparicao
+                  </code>
+                </p>
+                <Textarea
+                  value={bulkPaste}
+                  onChange={(e) => setBulkPaste(e.target.value)}
+                  placeholder={`### titulo_semana\nSemana 1: título\n\n### leitura_texto\nParágrafo em **Markdown**...`}
+                  className="min-h-[180px] font-mono text-sm"
+                />
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-scriptorium-gold/50"
+                    onClick={aplicarColagemUnica}
+                  >
+                    Aplicar ao formulário
+                  </Button>
+                </div>
+                {bulkHint && (
+                  <p className="mt-3 text-sm text-scriptorium-cream/80">{bulkHint}</p>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="titulo">Título da semana</Label>
                 <Input

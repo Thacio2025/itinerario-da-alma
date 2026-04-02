@@ -60,13 +60,12 @@ Observações opcionais do terapeuta: [EX.: ênfase em silêncio, confissão, ca
 ## Como colar no painel
 
 1. Gere o texto com a IA (saída em Markdown).
-2. No painel **Terapeuta** → **Editar** a semana correspondente:
-   - Copie o trecho sob `## titulo_semana` para o campo **Título da semana** (texto puro, sem o `##`).
-   - Faça o mesmo para cada campo: **leitura_fonte**, **leitura_texto** (Markdown), **doutrina_titulo**, **doutrina_corpo** (Markdown), etc.
-3. Campos longos suportam **Markdown**; use **Pré-visualizar** no formulário para conferir antes de salvar.
+2. No painel **Terapeuta** → **Editar** a semana correspondente, use o bloco **Colar semana inteira**: cole o documento inteiro (cada seção deve começar com uma linha só com `## nome_do_campo` ou `### nome_do_campo`, ex.: `## titulo_semana`, `## leitura_texto`, …). Clique em **Aplicar ao formulário** para preencher todos os campos de uma vez.
+3. Revise os campos; nos blocos longos use **Pré-visualizar** e depois **Salvar**.
+4. Se preferir, copie campo a campo manualmente (sem o cabeçalho `##` na linha do título).
 
 ---
 
 ## Dica
 
-Se a IA agrupar tudo em um único bloco, peça: *"Reformate para que cada seção comece exatamente com `## nome_do_campo` como acima"* e depois copie campo a campo.
+Se a IA agrupar tudo em um único bloco, peça: *"Reformate para que cada seção comece exatamente com `## nome_do_campo` como acima"* e depois use **Colar semana inteira** → **Aplicar ao formulário** no painel.
