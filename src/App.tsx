@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { HomePage } from "@/pages/index";
-import { AuthPage } from "@/pages/auth";
+import AuthPage from "@/pages/auth.tsx"
 import { ItinerarioAppPage } from "@/pages/app/itinerario";
 
 export default function App() {
