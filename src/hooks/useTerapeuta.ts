@@ -1,42 +1,26 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
 
-/** null = ainda carregando; true/false = resultado */
+/**
+ * E-mail autorizado a ver o botão "Painel terapeuta" e a usar a rota
+ * `/app/terapeuta`. (RLS no Supabase continua a usar a tabela `terapeutas`.)
+ */
+export const TERAPEUTA_PANEL_EMAIL = "thaciosiqueira@gmail.com";
+
+function emailAutorizadoTerapeuta(email: string | undefined | null): boolean {
+  if (!email) return false;
+  return (
+    email.toLowerCase().trim() === TERAPEUTA_PANEL_EMAIL.toLowerCase().trim()
+  );
+}
+
 export function useTerapeuta() {
   const { user, loading: authLoading } = useAuth();
-  const [isTerapeuta, setIsTerapeuta] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
-      setIsTerapeuta(false);
-      return;
-    }
+  const isTerapeuta = useMemo(
+    () => !authLoading && emailAutorizadoTerapeuta(user?.email),
+    [authLoading, user?.email],
+  );
 
-    let cancelled = false;
-    (async () => {
-      const { data, error } = await supabase
-        .from("terapeutas")
-        .select("user_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (cancelled) return;
-      if (error) {
-        console.warn("[terapeutas]", error.message);
-        setIsTerapeuta(false);
-        return;
-      }
-      setIsTerapeuta(!!data);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user, authLoading]);
-
-  const loading = authLoading || (user != null && isTerapeuta === null);
-
-  return { isTerapeuta: isTerapeuta ?? false, loading };
+  return { isTerapeuta, loading: authLoading };
 }

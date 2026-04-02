@@ -333,9 +333,8 @@ export function TerapeutaPage() {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <p className="text-scriptorium-cream/80">
-          Esta área é só para terapeutas cadastrados. Seu usuário ainda não está
-          na tabela <code className="text-scriptorium-gold">terapeutas</code> no
-          Supabase.
+          Esta área é restrita ao terapeuta autorizado. A conta com que você
+          entrou não tem permissão para o painel de conteúdo.
         </p>
         <Button className="mt-6" variant="outline" asChild>
           <Link to="/app/itinerario">Voltar ao meu itinerário</Link>
