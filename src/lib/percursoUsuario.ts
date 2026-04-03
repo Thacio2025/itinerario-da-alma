@@ -4,8 +4,9 @@ const LOGISMOI_MIN = 1;
 const LOGISMOI_MAX = 8;
 
 /**
- * Cria ou atualiza o percurso do utilizador com o logismoi escolhido.
- * Mantém um único percurso “ativo” por utilizador (última linha atualizada).
+ * Garante um percurso por par (utilizador, logismoi), conforme UNIQUE no schema.
+ * Não sobrescreve outro eixo: cada logismoi tem o seu próprio progresso e semana_atual.
+ * Ao “Salvar”, o percurso desse eixo fica como o mais recente (updated_at) para o painel.
  */
 export async function salvarPercursoLogismoi(
   logismoiId: number,
@@ -34,26 +35,23 @@ export async function salvarPercursoLogismoi(
     return { ok: false, message: "Sessão inválida. Entre novamente." };
   }
 
-  const { data: rows, error: selErr } = await supabase
+  const now = new Date().toISOString();
+
+  const { data: existing, error: selErr } = await supabase
     .from("usuario_percursos")
     .select("id")
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(1);
+    .eq("logismoi_id", logismoiId)
+    .maybeSingle();
 
   if (selErr) {
     return { ok: false, message: selErr.message };
   }
 
-  const existing = rows?.[0];
-
   if (existing) {
     const { error: upErr } = await supabase
       .from("usuario_percursos")
-      .update({
-        logismoi_id: logismoiId,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ updated_at: now })
       .eq("id", existing.id);
     if (upErr) return { ok: false, message: upErr.message };
     return { ok: true };
