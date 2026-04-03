@@ -62,6 +62,8 @@ export function ItinerarioEscolhaLogismoi({
   const [submitting, setSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveOk, setSaveOk] = useState(false);
+  /** Ao focar o campo, mostra todos os logismoi; ao digitar, aplica o filtro. */
+  const [mostrarTodosNoFoco, setMostrarTodosNoFoco] = useState(false);
   const listaRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
@@ -89,9 +91,22 @@ export function ItinerarioEscolhaLogismoi({
     [items, inputValue],
   );
 
+  const listaExibida = mostrarTodosNoFoco ? items : filtered;
+
+  const expandirListaNoCampo = () => {
+    setMostrarTodosNoFoco(true);
+    requestAnimationFrame(() => {
+      listaRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    });
+  };
+
   const selecionar = (l: LogismoiOpcao) => {
     setSelectedId(l.id);
     setInputValue(labelLogismoi(l));
+    setMostrarTodosNoFoco(false);
     setSaveOk(false);
     setSaveError(null);
   };
@@ -172,8 +187,8 @@ export function ItinerarioEscolhaLogismoi({
               Buscar e selecionar o logismoi
             </label>
             <p className="text-xs text-scriptorium-cream/55">
-              Toque no campo para ver todas as opções; digite para filtrar por
-              nome (português ou grego).
+              Toque no campo: aparecem todas as opções. Digite para filtrar (nome
+              em português ou grego).
             </p>
             <div className="relative">
               <Search
@@ -187,24 +202,27 @@ export function ItinerarioEscolhaLogismoi({
                 role="combobox"
                 aria-autocomplete="list"
                 aria-controls="lista-logismoi"
-                aria-expanded="true"
+                aria-expanded={listaExibida.length > 0}
                 value={inputValue}
                 onChange={(e) => {
                   setInputValue(e.target.value);
+                  setMostrarTodosNoFoco(false);
                   setSaveOk(false);
                   setSaveError(null);
                 }}
-                onFocus={() => {
-                  listaRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "nearest",
-                  });
+                onFocus={expandirListaNoCampo}
+                onClick={() => {
+                  // `onFocus` não dispara se o campo já está focado (ex.: segundo toque no mobile).
+                  expandirListaNoCampo();
+                }}
+                onBlur={() => {
+                  window.setTimeout(() => setMostrarTodosNoFoco(false), 180);
                 }}
                 placeholder="Filtrar a lista (ex.: Ira, Luxúria, Orgê…)"
                 className="w-full rounded-xl border border-white/15 bg-black/35 py-3 pl-10 pr-4 text-sm text-scriptorium-cream placeholder:text-scriptorium-cream/40 outline-none ring-scriptorium-gold/30 transition-shadow focus:border-scriptorium-gold/40 focus:ring-2"
               />
             </div>
-            {filtered.length > 0 ? (
+            {listaExibida.length > 0 ? (
               <ul
                 ref={listaRef}
                 id="lista-logismoi"
@@ -212,7 +230,7 @@ export function ItinerarioEscolhaLogismoi({
                 role="listbox"
                 aria-label="Lista de logismoi"
               >
-                {filtered.map((l) => {
+                {listaExibida.map((l) => {
                   const ativo = selectedId === l.id;
                   return (
                     <li key={l.id} role="option" aria-selected={ativo}>
@@ -224,6 +242,9 @@ export function ItinerarioEscolhaLogismoi({
                             ? "bg-scriptorium-gold/15 text-scriptorium-cream"
                             : "text-scriptorium-cream/90 hover:bg-white/5",
                         )}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                        }}
                         onClick={() => selecionar(l)}
                       >
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/40 text-scriptorium-gold">
