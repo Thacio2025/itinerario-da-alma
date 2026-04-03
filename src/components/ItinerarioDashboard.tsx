@@ -6,10 +6,12 @@ import {
   ChevronDown,
   Compass,
   Heart,
+  Download,
   Loader2,
   Lock,
   Moon,
   Printer,
+  Sparkles,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +31,7 @@ import {
   etapaEstaDesbloqueada,
 } from "@/lib/itinerarioEtapas";
 import { citacaoParaEtapaLogismoi } from "@/lib/citacoesPadresDeserto";
+import { printCertificadoPrimeiraEtapa } from "@/lib/printCertificadoPrimeiraEtapa";
 import { printEncorajamentoEtapa } from "@/lib/printEncorajamentoEtapa";
 import { mensagemValidacaoProva } from "@/lib/semanaProgresso";
 import type { ConcluirEtapaPayload } from "@/lib/semanaProgresso";
@@ -180,6 +183,10 @@ export function ItinerarioDashboard({
     numeroEtapa: number;
     tituloEtapa: string;
   } | null>(null);
+  const [balaoParabens, setBalaoParabens] = useState<{
+    numeroEtapa: number;
+    tituloEtapa: string;
+  } | null>(null);
 
   const temPercurso = Boolean(percurso);
   const temSemanasCadastradas = semanas.length > 0;
@@ -225,10 +232,121 @@ export function ItinerarioDashboard({
       numeroEtapa: numeroCompletado,
       tituloEtapa: tituloCompletado,
     });
+    setBalaoParabens({
+      numeroEtapa: numeroCompletado,
+      tituloEtapa: tituloCompletado,
+    });
+  };
+
+  useEffect(() => {
+    if (!balaoParabens) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setBalaoParabens(null);
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [balaoParabens]);
+
+  const emitirCertificadoPrimeiraEtapa = () => {
+    if (!encorajamentoPosEtapa || encorajamentoPosEtapa.numeroEtapa !== 1) {
+      return;
+    }
+    printCertificadoPrimeiraEtapa({
+      nomeLogismoi: percurso?.logismoi?.nome_portugues ?? "Itinerário",
+      tituloEtapa: encorajamentoPosEtapa.tituloEtapa,
+      dataConclusao: new Date(),
+      emailParticipante: userEmail ?? null,
+    });
   };
 
   return (
-    <div className={cn("space-y-10", className)}>
+    <div className={cn("relative space-y-10", className)}>
+      {balaoParabens && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="parabens-dialog-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/70 backdrop-blur-[2px]"
+            aria-label="Fechar parabéns"
+            onClick={() => setBalaoParabens(null)}
+          />
+          <div
+            className={cn(
+              "relative z-10 w-full max-w-md overflow-hidden rounded-[1.75rem]",
+              "border-2 border-scriptorium-gold/85 bg-gradient-to-b from-[#252019] to-[#14110d]",
+              "px-8 pb-10 pt-12 shadow-gold-glow shadow-2xl",
+            )}
+          >
+            <div
+              className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-scriptorium-gold/10 blur-2xl"
+              aria-hidden
+            />
+            <div className="flex justify-center">
+              <span className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-scriptorium-gold/40 bg-scriptorium-gold/15 text-scriptorium-gold">
+                <Sparkles className="h-8 w-8" strokeWidth={1.6} aria-hidden />
+              </span>
+            </div>
+            <h2
+              id="parabens-dialog-title"
+              className="mt-6 text-center font-display text-4xl font-semibold tracking-tight text-scriptorium-cream md:text-[2.5rem]"
+            >
+              Parabéns!!
+            </h2>
+            <p className="mt-3 text-center text-base leading-relaxed text-scriptorium-cream/75">
+              Concluiu a etapa{" "}
+              <span className="font-medium text-scriptorium-gold-muted">
+                {balaoParabens.numeroEtapa}
+              </span>
+              {balaoParabens.tituloEtapa ? (
+                <>
+                  :{" "}
+                  <span className="text-scriptorium-cream/90">
+                    {balaoParabens.tituloEtapa}
+                  </span>
+                </>
+              ) : null}
+              . Deus abençoe o próximo passo.
+            </p>
+            {balaoParabens.numeroEtapa === 1 && (
+              <div className="mt-8 flex flex-col gap-3">
+                <Button
+                  type="button"
+                  className="w-full gap-2 bg-scriptorium-gold text-scriptorium-bg hover:bg-scriptorium-gold/90"
+                  onClick={() => {
+                    emitirCertificadoPrimeiraEtapa();
+                  }}
+                >
+                  <Download className="h-4 w-4 shrink-0" aria-hidden />
+                  Baixar certificado da 1ª etapa (PDF)
+                </Button>
+                <p className="text-center text-xs text-scriptorium-cream/50">
+                  Na janela de impressão, escolha &quot;Guardar como PDF&quot;,
+                  se disponível.
+                </p>
+              </div>
+            )}
+            <div className="mt-8 flex justify-center">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-white/20 bg-black/30 text-scriptorium-cream hover:bg-white/10"
+                onClick={() => setBalaoParabens(null)}
+              >
+                Continuar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="space-y-4 text-center sm:text-left">
         <h2 className="font-display text-3xl font-semibold tracking-tight text-scriptorium-cream md:text-4xl">
           Seu itinerário
@@ -328,7 +446,7 @@ export function ItinerarioDashboard({
                     </blockquote>
                   );
                 })()}
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <Button
                   type="button"
                   className="gap-2 bg-scriptorium-gold text-scriptorium-bg hover:bg-scriptorium-gold/90"
@@ -350,6 +468,17 @@ export function ItinerarioDashboard({
                   <Printer className="h-4 w-4" aria-hidden />
                   Imprimir ou guardar PDF
                 </Button>
+                {encorajamentoPosEtapa.numeroEtapa === 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2 border-scriptorium-gold/45 text-scriptorium-gold hover:bg-scriptorium-gold/10"
+                    onClick={() => emitirCertificadoPrimeiraEtapa()}
+                  >
+                    <Download className="h-4 w-4" aria-hidden />
+                    Certificado da 1ª etapa (PDF)
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="ghost"
