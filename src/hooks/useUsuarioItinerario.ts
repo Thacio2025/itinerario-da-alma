@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
-import { marcarSemanaComoLida } from "@/lib/semanaProgresso";
+import {
+  concluirEtapaSemana,
+  type ConcluirEtapaPayload,
+} from "@/lib/semanaProgresso";
+
+export type { ConcluirEtapaPayload };
 
 export type LogismoiResumo = {
   nome_portugues: string;
@@ -148,41 +153,28 @@ export function useUsuarioItinerario() {
     setLoading(false);
   }, [user]);
 
-  /** Atualiza só o mapa de etapas lidas (sem ecrã de carregamento completo). */
-  const refetchProgresso = useCallback(async (percursoId: number) => {
-    if (!isSupabaseConfigured()) return;
-    const { data: prog, error: e3 } = await supabase
-      .from("usuario_semana_progresso")
-      .select("numero_semana, concluida_em, status")
-      .eq("percurso_id", percursoId);
-    if (e3) return;
-    const lidas: Record<number, boolean> = {};
-    prog?.forEach(
-      (p: {
-        numero_semana: number;
-        concluida_em: string | null;
-        status: string | null;
-      }) => {
-        lidas[p.numero_semana] =
-          p.concluida_em != null || p.status === "concluida";
-      },
-    );
-    setSemanasLidas(lidas);
-  }, []);
-
   const marcarSemanaLida = useCallback(
-    async (numeroSemana: number): Promise<boolean> => {
-      if (!percurso) return false;
+    async (
+      numeroSemana: number,
+      payload: ConcluirEtapaPayload,
+    ): Promise<{ ok: true } | { ok: false; message: string }> => {
+      if (!percurso) {
+        return { ok: false, message: "Nenhum percurso ativo." };
+      }
       setMarcandoSemana(numeroSemana);
-      const result = await marcarSemanaComoLida(percurso.id, numeroSemana);
+      const result = await concluirEtapaSemana(
+        percurso.id,
+        numeroSemana,
+        payload,
+      );
       setMarcandoSemana(null);
       if (result.ok) {
-        await refetchProgresso(percurso.id);
-        return true;
+        await refetch();
+        return { ok: true };
       }
-      return false;
+      return { ok: false, message: result.message };
     },
-    [percurso, refetchProgresso],
+    [percurso, refetch],
   );
 
   useEffect(() => {

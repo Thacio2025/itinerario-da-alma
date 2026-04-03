@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   BookOpen,
@@ -7,6 +7,7 @@ import {
   Compass,
   Heart,
   Loader2,
+  Lock,
   Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { LogismoiGlyph } from "@/lib/logismoiLucideIcons";
+import {
+  primeiraEtapaEmAberto,
+  semanaEstaDesbloqueada,
+} from "@/lib/itinerarioSemanas";
+import { mensagemValidacaoProva } from "@/lib/semanaProgresso";
+import type { ConcluirEtapaPayload } from "@/lib/semanaProgresso";
 import type {
   PercursoUsuario,
   SemanaItinerarioRow,
@@ -68,6 +77,68 @@ function BlocoMarkdown({ texto }: { texto: string | null | undefined }) {
   );
 }
 
+function EtapaConteudoMarkdown({ s }: { s: SemanaItinerarioRow }) {
+  return (
+    <div className="space-y-6">
+      {s.leitura_fonte && (
+        <p className="text-xs font-medium uppercase tracking-wide text-scriptorium-gold-muted">
+          Fonte: {s.leitura_fonte}
+        </p>
+      )}
+      {s.leitura_texto && (
+        <section>
+          <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wider text-scriptorium-gold">
+            Leitura
+          </h3>
+          <BlocoMarkdown texto={s.leitura_texto} />
+        </section>
+      )}
+      {(s.doutrina_titulo || s.doutrina_corpo) && (
+        <section>
+          {s.doutrina_titulo && (
+            <h3 className="mb-2 font-display text-lg text-scriptorium-cream">
+              {s.doutrina_titulo}
+            </h3>
+          )}
+          <BlocoMarkdown texto={s.doutrina_corpo} />
+        </section>
+      )}
+      {(s.exercicio_titulo || s.exercicio_descricao) && (
+        <section>
+          {s.exercicio_titulo && (
+            <h3 className="mb-2 font-display text-lg text-scriptorium-cream">
+              {s.exercicio_titulo}
+            </h3>
+          )}
+          <BlocoMarkdown texto={s.exercicio_descricao} />
+        </section>
+      )}
+      {(s.sinal_progresso_titulo || s.sinal_progresso_descricao) && (
+        <section>
+          {s.sinal_progresso_titulo && (
+            <h3 className="mb-2 font-display text-lg text-scriptorium-cream">
+              {s.sinal_progresso_titulo}
+            </h3>
+          )}
+          <BlocoMarkdown texto={s.sinal_progresso_descricao} />
+        </section>
+      )}
+      {!s.leitura_texto &&
+        !s.doutrina_corpo &&
+        !s.exercicio_descricao &&
+        !s.sinal_progresso_descricao && (
+          <p className="text-sm text-scriptorium-cream/65">
+            O texto completo desta etapa ainda não foi publicado pelo terapeuta.
+          </p>
+        )}
+    </div>
+  );
+}
+
+type MarcarResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
 type ItinerarioDashboardProps = {
   userEmail?: string | null;
   percurso?: PercursoUsuario | null;
@@ -75,7 +146,10 @@ type ItinerarioDashboardProps = {
   semanasLidas?: Record<number, boolean>;
   loading?: boolean;
   fetchError?: string | null;
-  onMarcarSemanaLida?: (numeroSemana: number) => Promise<boolean>;
+  onMarcarSemanaLida?: (
+    numeroSemana: number,
+    payload: ConcluirEtapaPayload,
+  ) => Promise<MarcarResult>;
   marcandoSemana?: number | null;
   className?: string;
 };
@@ -93,21 +167,46 @@ export function ItinerarioDashboard({
 }: ItinerarioDashboardProps) {
   const [expandida, setExpandida] = useState<number | null>(null);
   const [erroMarcar, setErroMarcar] = useState<string | null>(null);
+  const [reflexao, setReflexao] = useState("");
+  const [sinalObservado, setSinalObservado] = useState("");
+  const [confianca, setConfianca] = useState(5);
 
   const temPercurso = Boolean(percurso);
   const temSemanasCadastradas = semanas.length > 0;
+
+  const foco = primeiraEtapaEmAberto(semanas, semanasLidas);
+  const semanaFoco = foco
+    ? semanas.find((x) => x.numero_semana === foco)
+    : undefined;
+
+  useEffect(() => {
+    setReflexao("");
+    setSinalObservado("");
+    setConfianca(5);
+    setErroMarcar(null);
+  }, [foco]);
 
   const toggle = (n: number) => {
     setExpandida((prev) => (prev === n ? null : n));
     setErroMarcar(null);
   };
 
-  const onMarcar = async (numeroSemana: number) => {
+  const concluirEtapaAtual = async () => {
+    if (!onMarcarSemanaLida || foco == null) return;
     setErroMarcar(null);
-    if (!onMarcarSemanaLida) return;
-    const ok = await onMarcarSemanaLida(numeroSemana);
-    if (!ok) {
-      setErroMarcar("Não foi possível guardar a leitura. Tente de novo.");
+    const localErr = mensagemValidacaoProva(reflexao, sinalObservado);
+    if (localErr) {
+      setErroMarcar(localErr);
+      return;
+    }
+    const payload: ConcluirEtapaPayload = {
+      reflexao_texto: reflexao,
+      sinal_progresso_observado: sinalObservado,
+      confianca_virtude: confianca,
+    };
+    const res = await onMarcarSemanaLida(foco, payload);
+    if (!res.ok) {
+      setErroMarcar(res.message);
     }
   };
 
@@ -148,7 +247,7 @@ export function ItinerarioDashboard({
                 </span>
               </p>
               <p className="text-sm leading-relaxed text-scriptorium-cream/70">
-                Etapa sugerida no percurso:{" "}
+                Etapa atual do percurso:{" "}
                 <span className="font-medium text-scriptorium-gold-muted">
                   {percurso.semana_atual ?? 1}
                 </span>
@@ -184,142 +283,225 @@ export function ItinerarioDashboard({
       )}
 
       {!loading && temPercurso && temSemanasCadastradas && (
-        <div className="space-y-3">
-          <p className="text-sm text-scriptorium-cream/65">
-            Toque numa etapa para abrir o texto completo. Marque como lido
-            quando terminar — o estado fica guardado na sua conta.
+        <div className="space-y-8">
+          <p className="max-w-2xl text-sm leading-relaxed text-scriptorium-cream/65">
+            O caminho abre etapa por etapa. Registe uma reflexão ou um sinal de
+            progresso para concluir — não basta marcar sem escrever. As etapas
+            seguintes desbloqueiam quando a anterior estiver concluída.
           </p>
-          <div className="flex flex-col gap-2">
-            {semanas.map((s) => {
-              const lida = Boolean(semanasLidas[s.numero_semana]);
-              const aberta = expandida === s.numero_semana;
-              return (
-                <div
-                  key={s.numero_semana}
-                  className="overflow-hidden rounded-xl border border-white/10 bg-black/25 shadow-card-lift"
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggle(s.numero_semana)}
-                    className="flex w-full items-start gap-3 px-4 py-4 text-left transition-colors hover:bg-white/[0.04] sm:items-center sm:gap-4"
-                  >
-                    <ChevronDown
-                      className={cn(
-                        "mt-0.5 h-5 w-5 shrink-0 text-scriptorium-gold-muted transition-transform sm:mt-0",
-                        aberta && "rotate-180",
-                      )}
-                      aria-hidden
+
+          {foco != null && semanaFoco && (
+            <Card className="rounded-xl border-scriptorium-gold/25 bg-gradient-to-b from-scriptorium-gold/[0.07] to-black/30 shadow-card-lift">
+              <CardHeader className="space-y-2 pb-2">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-scriptorium-gold-muted">
+                  Esta semana no caminho · Etapa {semanaFoco.numero_semana}
+                  {semanaFoco.tipo_fase ? ` · ${semanaFoco.tipo_fase}` : ""}
+                </p>
+                <CardTitle className="font-display text-2xl text-scriptorium-cream md:text-[1.65rem]">
+                  {semanaFoco.titulo_semana}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-8 pt-0">
+                <EtapaConteudoMarkdown s={semanaFoco} />
+
+                <div className="space-y-4 rounded-lg border border-white/10 bg-black/35 p-4 sm:p-5">
+                  <p className="font-display text-base font-medium text-scriptorium-cream">
+                    Antes de concluir esta etapa
+                  </p>
+                  <p className="text-sm leading-relaxed text-scriptorium-cream/70">
+                    Escreva com sinceridade. Basta preencher com profundidade{" "}
+                    <span className="text-scriptorium-cream/90">
+                      um dos dois primeiros campos
+                    </span>{" "}
+                    (mínimo de 20 caracteres).
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="reflexao-etapa">Reflexão breve</Label>
+                    <Textarea
+                      id="reflexao-etapa"
+                      value={reflexao}
+                      onChange={(e) => setReflexao(e.target.value)}
+                      placeholder="O que esta etapa despertou em si?"
+                      className="min-h-[100px]"
                     />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-scriptorium-gold-muted">
-                        Etapa {s.numero_semana}
-                        {s.tipo_fase ? ` · ${s.tipo_fase}` : ""}
-                      </p>
-                      <p className="mt-1 font-display text-lg font-semibold leading-snug text-scriptorium-cream">
-                        {s.titulo_semana}
-                      </p>
-                    </div>
-                    {lida && (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400/95">
-                        <Check className="h-3.5 w-3.5" aria-hidden />
-                        Lido
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="sinal-etapa">Sinal de progresso observado</Label>
+                    <Textarea
+                      id="sinal-etapa"
+                      value={sinalObservado}
+                      onChange={(e) => setSinalObservado(e.target.value)}
+                      placeholder="Que mudança concreta notou na oração, nas relações ou na disposição interior?"
+                      className="min-h-[100px]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <Label htmlFor="confianca-etapa">
+                        Confiança na virtude oposta (0–10)
+                      </Label>
+                      <span className="text-sm tabular-nums text-scriptorium-gold-muted">
+                        {confianca}
                       </span>
+                    </div>
+                    <input
+                      id="confianca-etapa"
+                      type="range"
+                      min={0}
+                      max={10}
+                      step={1}
+                      value={confianca}
+                      onChange={(e) =>
+                        setConfianca(Number.parseInt(e.target.value, 10))
+                      }
+                      className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-scriptorium-gold"
+                    />
+                    <p className="text-xs text-scriptorium-cream/50">
+                      Opcional; ajuda a acompanhar o movimento interior ao longo
+                      das semanas.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    disabled={
+                      marcandoSemana === foco || !onMarcarSemanaLida
+                    }
+                    className="w-full bg-scriptorium-gold text-scriptorium-bg hover:bg-scriptorium-gold/90 sm:w-auto"
+                    onClick={() => void concluirEtapaAtual()}
+                  >
+                    {marcandoSemana === foco ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        A registar…
+                      </>
+                    ) : (
+                      "Concluir etapa e desbloquear a seguinte"
                     )}
-                  </button>
-                  {aberta && (
-                    <div className="space-y-6 border-t border-white/10 bg-black/30 px-4 py-6 sm:px-6">
-                      {s.leitura_fonte && (
-                        <p className="text-xs font-medium uppercase tracking-wide text-scriptorium-gold-muted">
-                          Fonte: {s.leitura_fonte}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {foco == null && semanas.length > 0 && (
+            <Card className="rounded-xl border-emerald-500/20 bg-emerald-950/20 shadow-card-lift">
+              <CardHeader>
+                <CardTitle className="font-display text-xl text-scriptorium-cream">
+                  Itinerário deste eixo concluído
+                </CardTitle>
+                <CardDescription className="text-base leading-relaxed text-scriptorium-cream/75">
+                  Concluiu as etapas disponíveis. Pode rever o conteúdo abaixo;
+                  o registo das suas reflexões permanece na conta.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
+
+          <div className="space-y-3">
+            <h3 className="font-display text-lg font-semibold text-scriptorium-cream">
+              Caminho das etapas
+            </h3>
+            <p className="text-sm text-scriptorium-cream/55">
+              Etapas futuras permanecem fechadas até concluir a anterior. Toque
+              numa etapa já concluída para reler o material.
+            </p>
+            <div className="flex flex-col gap-2">
+              {semanas.map((s) => {
+                const lida = Boolean(semanasLidas[s.numero_semana]);
+                const desbloqueada = semanaEstaDesbloqueada(
+                  s.numero_semana,
+                  semanasLidas,
+                );
+                const aberta = expandida === s.numero_semana;
+                const eFoco = foco === s.numero_semana;
+                const bloqueada = !desbloqueada;
+
+                return (
+                  <div
+                    key={s.numero_semana}
+                    className={cn(
+                      "overflow-hidden rounded-xl border bg-black/25 shadow-card-lift",
+                      eFoco && !lida
+                        ? "border-scriptorium-gold/35 ring-1 ring-scriptorium-gold/15"
+                        : "border-white/10",
+                      bloqueada && "opacity-90",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        bloqueada ? undefined : toggle(s.numero_semana)
+                      }
+                      disabled={bloqueada}
+                      className={cn(
+                        "flex w-full items-start gap-3 px-4 py-4 text-left transition-colors sm:items-center sm:gap-4",
+                        bloqueada
+                          ? "cursor-not-allowed"
+                          : "hover:bg-white/[0.04]",
+                      )}
+                    >
+                      {bloqueada ? (
+                        <Lock
+                          className="mt-0.5 h-5 w-5 shrink-0 text-scriptorium-cream/45"
+                          aria-hidden
+                        />
+                      ) : (
+                        <ChevronDown
+                          className={cn(
+                            "mt-0.5 h-5 w-5 shrink-0 text-scriptorium-gold-muted transition-transform sm:mt-0",
+                            aberta && "rotate-180",
+                          )}
+                          aria-hidden
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-scriptorium-gold-muted">
+                          Etapa {s.numero_semana}
+                          {s.tipo_fase ? ` · ${s.tipo_fase}` : ""}
                         </p>
-                      )}
-                      {s.leitura_texto && (
-                        <section>
-                          <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wider text-scriptorium-gold">
-                            Leitura
-                          </h3>
-                          <BlocoMarkdown texto={s.leitura_texto} />
-                        </section>
-                      )}
-                      {(s.doutrina_titulo || s.doutrina_corpo) && (
-                        <section>
-                          {s.doutrina_titulo && (
-                            <h3 className="mb-2 font-display text-lg text-scriptorium-cream">
-                              {s.doutrina_titulo}
-                            </h3>
-                          )}
-                          <BlocoMarkdown texto={s.doutrina_corpo} />
-                        </section>
-                      )}
-                      {(s.exercicio_titulo || s.exercicio_descricao) && (
-                        <section>
-                          {s.exercicio_titulo && (
-                            <h3 className="mb-2 font-display text-lg text-scriptorium-cream">
-                              {s.exercicio_titulo}
-                            </h3>
-                          )}
-                          <BlocoMarkdown texto={s.exercicio_descricao} />
-                        </section>
-                      )}
-                      {(s.sinal_progresso_titulo || s.sinal_progresso_descricao) && (
-                        <section>
-                          {s.sinal_progresso_titulo && (
-                            <h3 className="mb-2 font-display text-lg text-scriptorium-cream">
-                              {s.sinal_progresso_titulo}
-                            </h3>
-                          )}
-                          <BlocoMarkdown texto={s.sinal_progresso_descricao} />
-                        </section>
-                      )}
-                      {!s.leitura_texto &&
-                        !s.doutrina_corpo &&
-                        !s.exercicio_descricao &&
-                        !s.sinal_progresso_descricao && (
-                          <p className="text-sm text-scriptorium-cream/65">
-                            O texto completo desta etapa ainda não foi publicado
-                            pelo terapeuta.
+                        <p className="mt-1 font-display text-lg font-semibold leading-snug text-scriptorium-cream">
+                          {s.titulo_semana}
+                        </p>
+                        {bloqueada && (
+                          <p className="mt-2 text-sm text-scriptorium-cream/55">
+                            Disponível após concluir a etapa {s.numero_semana - 1}.
                           </p>
                         )}
-                      <div className="pt-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          disabled={
-                            lida ||
-                            marcandoSemana === s.numero_semana ||
-                            !onMarcarSemanaLida
-                          }
-                          className={
-                            lida
-                              ? "border border-emerald-500/40 bg-transparent text-emerald-400/90"
-                              : "bg-scriptorium-gold text-scriptorium-bg hover:bg-scriptorium-gold/90"
-                          }
-                          variant={lida ? "outline" : "default"}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void onMarcar(s.numero_semana);
-                          }}
-                        >
-                          {marcandoSemana === s.numero_semana ? (
-                            <>
-                              <Loader2 className="animate-spin" />
-                              Salvando…
-                            </>
-                          ) : lida ? (
-                            <>
-                              <Check className="h-4 w-4" />
-                              Etapa registrada como lida
-                            </>
-                          ) : (
-                            "Marcar etapa como lida"
-                          )}
-                        </Button>
+                        {eFoco && !lida && !bloqueada && (
+                          <p className="mt-2 text-sm text-scriptorium-gold-muted">
+                            Conteúdo e registo no bloco &quot;Esta semana no
+                            caminho&quot; acima.
+                          </p>
+                        )}
                       </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                      {lida && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-400/95">
+                          <Check className="h-3.5 w-3.5" aria-hidden />
+                          Concluída
+                        </span>
+                      )}
+                    </button>
+                    {aberta && !bloqueada && !eFoco && (
+                      <div className="space-y-6 border-t border-white/10 bg-black/30 px-4 py-6 sm:px-6">
+                        <EtapaConteudoMarkdown s={s} />
+                        <p className="text-sm text-scriptorium-cream/55">
+                          Para concluir etapas em aberto, use o bloco principal
+                          no topo da página.
+                        </p>
+                      </div>
+                    )}
+                    {aberta && !bloqueada && eFoco && !lida && (
+                      <div className="border-t border-white/10 bg-black/20 px-4 py-4 sm:px-6">
+                        <p className="text-sm text-scriptorium-cream/60">
+                          Leia e registe a reflexão no cartão destacado acima —
+                          não é necessário repetir aqui.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -384,7 +566,7 @@ export function ItinerarioDashboard({
           </CardTitle>
           <CardDescription className="text-base leading-relaxed text-scriptorium-cream/75">
             {temPercurso
-              ? "Reserve momentos regulares para cada etapa. O progresso de leitura fica associado à sua conta."
+              ? "Reserve tempo para uma etapa de cada vez. O progresso e os seus escritos ficam associados à sua conta."
               : "Salve o percurso acima para ver as etapas quando estiverem disponíveis."}
           </CardDescription>
         </CardHeader>
