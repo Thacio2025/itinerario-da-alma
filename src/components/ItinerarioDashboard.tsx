@@ -340,7 +340,8 @@ export function ItinerarioDashboard({
                     printEncorajamentoEtapa({
                       numeroEtapa: encorajamentoPosEtapa.numeroEtapa,
                       tituloEtapa: encorajamentoPosEtapa.tituloEtapa,
-                      nomeLogismoi: percurso.logismoi.nome_portugues,
+                      nomeLogismoi:
+                        percurso.logismoi?.nome_portugues ?? "Itinerário",
                       dataConclusao: new Date(),
                       citacao: c,
                     });
@@ -599,7 +600,9 @@ export function ItinerarioDashboard({
                                 printEncorajamentoEtapa({
                                   numeroEtapa: s.numero_semana,
                                   tituloEtapa: s.titulo_semana,
-                                  nomeLogismoi: percurso.logismoi.nome_portugues,
+                                  nomeLogismoi:
+                                    percurso.logismoi?.nome_portugues ??
+                                    "Itinerário",
                                   dataConclusao: ds
                                     ? new Date(ds)
                                     : new Date(),
