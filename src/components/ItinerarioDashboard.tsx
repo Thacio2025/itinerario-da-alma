@@ -281,7 +281,10 @@ export function ItinerarioDashboard({
   };
 
   return (
-    <div className={cn("relative space-y-10", className)}>
+    <div
+      id="painel-itinerario-principal"
+      className={cn("relative space-y-10 scroll-mt-24", className)}
+    >
       {balaoParabens && (
         <div
           role="dialog"
@@ -518,7 +521,10 @@ export function ItinerarioDashboard({
           </p>
 
           {foco != null && etapaFoco && (
-            <Card className="rounded-xl border-scriptorium-gold/25 bg-gradient-to-b from-scriptorium-gold/[0.07] to-[rgba(20,17,13,0.92)] shadow-card-lift backdrop-blur-[1px]">
+            <Card
+              id="primeira-etapa-conteudo"
+              className="scroll-mt-28 rounded-xl border-scriptorium-gold/25 bg-gradient-to-b from-scriptorium-gold/[0.07] to-[rgba(20,17,13,0.92)] shadow-card-lift backdrop-blur-[1px]"
+            >
               <CardHeader className="space-y-2 pb-2 tracking-[0.02em]">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-scriptorium-gold-muted">
                   Esta etapa no caminho · Etapa {etapaFoco.numero_semana}

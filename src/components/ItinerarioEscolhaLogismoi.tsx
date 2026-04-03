@@ -48,6 +48,8 @@ type ItinerarioEscolhaLogismoiProps = {
   itinerarioLoading?: boolean;
   onPercursoSalvo?: () => void;
   className?: string;
+  /** Fluxo pós-diagnóstico: título e texto focados no resultado do exame. */
+  mode?: "full" | "onboarding";
 };
 
 export function ItinerarioEscolhaLogismoi({
@@ -55,6 +57,7 @@ export function ItinerarioEscolhaLogismoi({
   itinerarioLoading = false,
   onPercursoSalvo,
   className,
+  mode = "full",
 }: ItinerarioEscolhaLogismoiProps) {
   const { items, loading: loadingLista, error: erroLista } = useLogismoiOpcoes();
   const [selectedId, setSelectedId] = useState<number>(1);
@@ -134,36 +137,52 @@ export function ItinerarioEscolhaLogismoi({
     >
       <CardHeader className="space-y-3 border-b border-white/[0.06] pb-8">
         <h2 className="font-display text-2xl font-semibold tracking-tight text-scriptorium-cream md:text-3xl">
-          Seu percurso
+          {mode === "onboarding"
+            ? "Qual foi o logismoi do seu diagnóstico?"
+            : "Seu percurso"}
         </h2>
         <div className="max-w-3xl space-y-4 text-base leading-relaxed text-scriptorium-cream/80">
-          <p>
-            Depois de ter feito o{" "}
-            <strong className="font-medium text-scriptorium-cream/95">
-              diagnóstico da alma
-            </strong>{" "}
-            no site{" "}
-            <a
-              href={DIAGNOSTICO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 font-medium text-scriptorium-gold underline-offset-4 hover:underline"
-            >
-              Diagnóstico Espiritual
-              <ExternalLink className="h-3.5 w-3.5 opacity-80" aria-hidden />
-            </a>
-            , você é convidado a iniciar um itinerário em{" "}
-            <strong className="font-medium text-scriptorium-cream/95">
-              12 etapas
-            </strong>{" "}
-            para lutar contra o logismoi dominante identificado no seu exame —
-            com leitura, doutrina e exercícios, no ritmo da tradição dos Padres
-            do deserto.
-          </p>
-          <p className="text-scriptorium-cream/70">
-            Indique abaixo qual logismoi será o eixo deste percurso (o mesmo do
-            seu diagnóstico ou o que o diretor espiritual recomendar).
-          </p>
+          {mode === "onboarding" ? (
+            <p>
+              Indique o{" "}
+              <strong className="font-medium text-scriptorium-cream/95">
+                pensamento dominante
+              </strong>{" "}
+              que o Diagnóstico Espiritual apontou para si — ou o que o seu
+              diretor espiritual recomendar. Esse eixo guiará as doze etapas do
+              itinerário.
+            </p>
+          ) : (
+            <>
+              <p>
+                Depois de ter feito o{" "}
+                <strong className="font-medium text-scriptorium-cream/95">
+                  diagnóstico da alma
+                </strong>{" "}
+                no site{" "}
+                <a
+                  href={DIAGNOSTICO_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-medium text-scriptorium-gold underline-offset-4 hover:underline"
+                >
+                  Diagnóstico Espiritual
+                  <ExternalLink className="h-3.5 w-3.5 opacity-80" aria-hidden />
+                </a>
+                , você é convidado a iniciar um itinerário em{" "}
+                <strong className="font-medium text-scriptorium-cream/95">
+                  12 etapas
+                </strong>{" "}
+                para lutar contra o logismoi dominante identificado no seu exame
+                — com leitura, doutrina e exercícios, no ritmo da tradição dos
+                Padres do deserto.
+              </p>
+              <p className="text-scriptorium-cream/70">
+                Indique abaixo qual logismoi será o eixo deste percurso (o mesmo
+                do seu diagnóstico ou o que o diretor espiritual recomendar).
+              </p>
+            </>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-8 pt-8">

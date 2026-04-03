@@ -1,11 +1,22 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ItinerarioDashboard } from "@/components/ItinerarioDashboard";
 import { ItinerarioEscolhaLogismoi } from "@/components/ItinerarioEscolhaLogismoi";
+import { ItinerarioOnboardingDiagnostico } from "@/components/ItinerarioOnboardingDiagnostico";
+import { ItinerarioOnboardingIntro12 } from "@/components/ItinerarioOnboardingIntro12";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTerapeuta } from "@/hooks/useTerapeuta";
 import { useUsuarioItinerario } from "@/hooks/useUsuarioItinerario";
+import {
+  getDiagnosticoConfirmado,
+  getIntro12EtapasVisto,
+  setDiagnosticoConfirmado,
+  setIntro12EtapasVisto,
+} from "@/lib/onboardingItinerarioStorage";
+
+type OnboardingStep = "diagnostico" | "logismoi" | "intro12" | "complete";
 
 export function ItinerarioAppPage() {
   const { user, loading, signOut } = useAuth();
@@ -21,6 +32,41 @@ export function ItinerarioAppPage() {
     marcarSemanaLida,
     marcandoSemana,
   } = useUsuarioItinerario();
+
+  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!user || itinerarioLoading) return;
+    if (percurso) {
+      setOnboardingStep(
+        getIntro12EtapasVisto(user.id) ? "complete" : "intro12",
+      );
+    } else {
+      setOnboardingStep(
+        getDiagnosticoConfirmado(user.id) ? "logismoi" : "diagnostico",
+      );
+    }
+  }, [user, percurso, itinerarioLoading]);
+
+  const confirmarDiagnosticoSim = () => {
+    if (!user) return;
+    setDiagnosticoConfirmado(user.id);
+    setOnboardingStep("logismoi");
+  };
+
+  const irParaPrimeiraEtapa = () => {
+    if (!user) return;
+    setIntro12EtapasVisto(user.id);
+    setOnboardingStep("complete");
+    requestAnimationFrame(() => {
+      const alvo =
+        document.getElementById("primeira-etapa-conteudo") ??
+        document.getElementById("painel-itinerario-principal");
+      alvo?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
   if (loading) {
     return (
@@ -61,8 +107,11 @@ export function ItinerarioAppPage() {
                 <span className="text-scriptorium-gold">da Alma</span>
               </h1>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-scriptorium-cream/80 md:text-lg">
-                Um espaço reservado para o caminho interior — escolha o logismoi
-                em que deseja crescer e acompanhe as etapas com calma e clareza.
+                {onboardingStep === "diagnostico" ||
+                onboardingStep === "logismoi" ||
+                onboardingStep === "intro12"
+                  ? "Siga as etapas: primeiro o diagnóstico, depois o eixo do combate e, por fim, o caminho em doze etapas."
+                  : "Um espaço reservado para o caminho interior — escolha o logismoi em que deseja crescer e acompanhe as etapas com calma e clareza."}
               </p>
             </div>
 
@@ -100,23 +149,47 @@ export function ItinerarioAppPage() {
       </section>
 
       <div className="mx-auto max-w-5xl space-y-14 px-4 py-12 md:px-8 lg:px-12 lg:py-16">
-        <ItinerarioEscolhaLogismoi
-          logismoiIdAtual={percurso?.logismoi_id ?? null}
-          itinerarioLoading={itinerarioLoading}
-          onPercursoSalvo={() => void refetchItinerario()}
-        />
+        {onboardingStep === null ? (
+          <p className="text-center text-scriptorium-cream/65">
+            Carregando o seu percurso…
+          </p>
+        ) : onboardingStep === "diagnostico" ? (
+          <ItinerarioOnboardingDiagnostico
+            onConfirmouSim={confirmarDiagnosticoSim}
+          />
+        ) : onboardingStep === "logismoi" ? (
+          <ItinerarioEscolhaLogismoi
+            mode="onboarding"
+            logismoiIdAtual={percurso?.logismoi_id ?? null}
+            itinerarioLoading={itinerarioLoading}
+            onPercursoSalvo={() => void refetchItinerario()}
+          />
+        ) : onboardingStep === "intro12" ? (
+          <ItinerarioOnboardingIntro12
+            nomeLogismoi={percurso?.logismoi?.nome_portugues ?? null}
+            onIrPrimeiraEtapa={irParaPrimeiraEtapa}
+          />
+        ) : (
+          <>
+            <ItinerarioEscolhaLogismoi
+              logismoiIdAtual={percurso?.logismoi_id ?? null}
+              itinerarioLoading={itinerarioLoading}
+              onPercursoSalvo={() => void refetchItinerario()}
+            />
 
-        <ItinerarioDashboard
-          userEmail={user.email}
-          percurso={percurso}
-          semanas={semanas}
-          semanasLidas={semanasLidas}
-          etapaConcluidaEm={etapaConcluidaEm}
-          loading={itinerarioLoading}
-          fetchError={itinerarioError}
-          onMarcarSemanaLida={marcarSemanaLida}
-          marcandoSemana={marcandoSemana}
-        />
+            <ItinerarioDashboard
+              userEmail={user.email}
+              percurso={percurso}
+              semanas={semanas}
+              semanasLidas={semanasLidas}
+              etapaConcluidaEm={etapaConcluidaEm}
+              loading={itinerarioLoading}
+              fetchError={itinerarioError}
+              onMarcarSemanaLida={marcarSemanaLida}
+              marcandoSemana={marcandoSemana}
+            />
+          </>
+        )}
       </div>
     </div>
   );
