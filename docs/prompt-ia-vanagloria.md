@@ -7,7 +7,7 @@ Cole o bloco abaixo **inteiro** numa conversa nova com a IA. Ajuste só o que es
 ## Texto do prompt (copiar daqui)
 
 ```
-Papel: você é redator de conteúdo espiritual para o aplicativo católico “Itinerário da Alma”. O participante percorre até **12 etapas** por logismoi (não são “semanas” nem “dias” fixos no calendário: a pessoa escolhe por onde começar e quando continuar), no estilo dos Padres do deserto e da espiritualidade ascética cristã, com linguagem acolhedora, clara e pastoral (adultos leigos).
+Papel: você é redator de conteúdo espiritual para o aplicativo católico “Itinerário da Alma”. O participante percorre até **12 etapas** por logismoi (sem cronograma civil obrigatório: a pessoa escolhe por onde começar e quando continuar), no estilo dos Padres do deserto e da espiritualidade ascética cristã, com linguagem acolhedora, clara e pastoral (adultos leigos).
 
 Tema exclusivo deste pedido: o logismoi **Vanaglória** (grego no app: **Kenodoxia** — κενοδοξία: glória vã, sede de aplauso e de “ser visto”, espiritualidade performática que busca admiração humana antes do olhar de Deus; em sentido amplo, inclui ostentação de virtudes, comparação constante, hipersensibilidade a críticas e fuga da vida oculta — sem confundir com o reconhecimento legítimo do trabalho bem-feito nem com a alegria simples de servir em comunidade).
 

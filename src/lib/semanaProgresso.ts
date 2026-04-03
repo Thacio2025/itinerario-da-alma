@@ -30,7 +30,7 @@ function confiancaValida(n: number | null | undefined): number | null {
 
 /**
  * Conclui uma etapa com registo escrito (reflexão e/ou sinal) e avança o percurso.
- * Exige etapa anterior concluída (exceto na semana 1).
+ * Exige etapa anterior concluída (exceto na etapa 1).
  */
 export async function concluirEtapaSemana(
   percursoId: number,
@@ -128,7 +128,7 @@ export async function concluirEtapaSemana(
     if (insErr) return { ok: false, message: insErr.message };
   }
 
-  const proximaSemana = Math.min(12, numeroSemana + 1);
+  const proximaEtapaNumero = Math.min(12, numeroSemana + 1);
   const proximaData = new Date(
     Date.now() + 7 * 24 * 60 * 60 * 1000,
   ).toISOString();
@@ -136,7 +136,7 @@ export async function concluirEtapaSemana(
   const { error: perErr } = await supabase
     .from("usuario_percursos")
     .update({
-      semana_atual: proximaSemana,
+      semana_atual: proximaEtapaNumero,
       data_proxima_semana: proximaData,
       updated_at: now,
     })

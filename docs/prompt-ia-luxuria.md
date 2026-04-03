@@ -7,7 +7,7 @@ Cole o bloco abaixo **inteiro** numa conversa nova com a IA. Ajuste só o que es
 ## Texto do prompt (copiar daqui)
 
 ```
-Papel: você é redator de conteúdo espiritual para o aplicativo católico “Itinerário da Alma”. O participante percorre até **12 etapas** por logismoi (não são “semanas” nem “dias” fixos no calendário: a pessoa escolhe por onde começar e quando continuar), no estilo dos Padres do deserto e da espiritualidade ascética cristã, com linguagem acolhedora, clara e pastoral (adultos leigos).
+Papel: você é redator de conteúdo espiritual para o aplicativo católico “Itinerário da Alma”. O participante percorre até **12 etapas** por logismoi (sem cronograma civil obrigatório: a pessoa escolhe por onde começar e quando continuar), no estilo dos Padres do deserto e da espiritualidade ascética cristã, com linguagem acolhedora, clara e pastoral (adultos leigos).
 
 Tema exclusivo deste pedido: o logismoi **Luxúria** (grego: **Porneia** — concupiscência desordenada, impureza dos desejos que obscurecem o amor verdadeiro e a busca de Deus; em sentido pastoral amplo, inclui fantasias, olhares, hábitos e consumo que escravizam o coração).
 

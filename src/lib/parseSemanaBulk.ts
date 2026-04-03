@@ -100,7 +100,7 @@ export function parseOrdemAparicao(s: string | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** Linha `## Etapa N` ou `## Semana N` (nível 2) — separa blocos; `###` não dispara. */
+/** Linha `## Etapa N` (nível 2); aceita também `## Semana N` por compatibilidade — separa blocos. */
 const ETAPA_HEADER_RE = /^##\s+(?:Etapa|Semana)\s*(\d{1,2})\b/i;
 
 export type EtapaMultiItem = {
@@ -146,7 +146,7 @@ function splitByEtapaHeaders(raw: string): { numero: number; body: string }[] {
 }
 
 /**
- * Várias etapas: cada uma começa com `## Etapa N` ou `## Semana N` (1–12), depois
+ * Várias etapas: cada uma começa com `## Etapa N` (1–12), depois
  * `### titulo_semana`, etc. (igual ao colar de uma etapa).
  * Um único bloco sem esses cabeçalhos: interpreta o texto inteiro como **uma** etapa
  * (número vindo de `ordem_aparicao` ou 1).

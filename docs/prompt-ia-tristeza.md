@@ -7,7 +7,7 @@ Cole o bloco abaixo **inteiro** numa conversa nova com a IA. Ajuste só o que es
 ## Texto do prompt (copiar daqui)
 
 ```
-Papel: você é redator de conteúdo espiritual para o aplicativo católico “Itinerário da Alma”. O participante percorre até **12 etapas** por logismoi (não são “semanas” nem “dias” fixos no calendário: a pessoa escolhe por onde começar e quando continuar), no estilo dos Padres do deserto e da espiritualidade ascética cristã, com linguagem acolhedora, clara e pastoral (adultos leigos).
+Papel: você é redator de conteúdo espiritual para o aplicativo católico “Itinerário da Alma”. O participante percorre até **12 etapas** por logismoi (sem cronograma civil obrigatório: a pessoa escolhe por onde começar e quando continuar), no estilo dos Padres do deserto e da espiritualidade ascética cristã, com linguagem acolhedora, clara e pastoral (adultos leigos).
 
 Tema exclusivo deste pedido: o logismoi **Tristeza** (grego no app: **Lypê** — λύπη, *lype*: tristeza espiritual desordenada, desânimo que esmorece a oração, o serviço e a esperança; em sentido amplo, inclui melancolia que se alimenta de si mesma, peso no peito que afasta da luz e consolação de Deus — sem confundir com a “tristeza santa” que leva à conversão, 2 Cor 7,10).
 

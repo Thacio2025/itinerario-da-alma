@@ -24,8 +24,8 @@ import { cn } from "@/lib/utils";
 import { LogismoiGlyph } from "@/lib/logismoiLucideIcons";
 import {
   primeiraEtapaEmAberto,
-  semanaEstaDesbloqueada,
-} from "@/lib/itinerarioSemanas";
+  etapaEstaDesbloqueada,
+} from "@/lib/itinerarioEtapas";
 import { mensagemValidacaoProva } from "@/lib/semanaProgresso";
 import type { ConcluirEtapaPayload } from "@/lib/semanaProgresso";
 import type {
@@ -175,7 +175,7 @@ export function ItinerarioDashboard({
   const temSemanasCadastradas = semanas.length > 0;
 
   const foco = primeiraEtapaEmAberto(semanas, semanasLidas);
-  const semanaFoco = foco
+  const etapaFoco = foco
     ? semanas.find((x) => x.numero_semana === foco)
     : undefined;
 
@@ -290,19 +290,19 @@ export function ItinerarioDashboard({
             seguintes desbloqueiam quando a anterior estiver concluída.
           </p>
 
-          {foco != null && semanaFoco && (
+          {foco != null && etapaFoco && (
             <Card className="rounded-xl border-scriptorium-gold/25 bg-gradient-to-b from-scriptorium-gold/[0.07] to-black/30 shadow-card-lift">
               <CardHeader className="space-y-2 pb-2">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-scriptorium-gold-muted">
-                  Esta semana no caminho · Etapa {semanaFoco.numero_semana}
-                  {semanaFoco.tipo_fase ? ` · ${semanaFoco.tipo_fase}` : ""}
+                  Esta etapa no caminho · Etapa {etapaFoco.numero_semana}
+                  {etapaFoco.tipo_fase ? ` · ${etapaFoco.tipo_fase}` : ""}
                 </p>
                 <CardTitle className="font-display text-2xl text-scriptorium-cream md:text-[1.65rem]">
-                  {semanaFoco.titulo_semana}
+                  {etapaFoco.titulo_semana}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8 pt-0">
-                <EtapaConteudoMarkdown s={semanaFoco} />
+                <EtapaConteudoMarkdown s={etapaFoco} />
 
                 <div className="space-y-4 rounded-lg border border-white/10 bg-black/35 p-4 sm:p-5">
                   <p className="font-display text-base font-medium text-scriptorium-cream">
@@ -358,7 +358,7 @@ export function ItinerarioDashboard({
                     />
                     <p className="text-xs text-scriptorium-cream/50">
                       Opcional; ajuda a acompanhar o movimento interior ao longo
-                      das semanas.
+                      das etapas.
                     </p>
                   </div>
                   <Button
@@ -408,7 +408,7 @@ export function ItinerarioDashboard({
             <div className="flex flex-col gap-2">
               {semanas.map((s) => {
                 const lida = Boolean(semanasLidas[s.numero_semana]);
-                const desbloqueada = semanaEstaDesbloqueada(
+                const desbloqueada = etapaEstaDesbloqueada(
                   s.numero_semana,
                   semanasLidas,
                 );
@@ -469,7 +469,7 @@ export function ItinerarioDashboard({
                         )}
                         {eFoco && !lida && !bloqueada && (
                           <p className="mt-2 text-sm text-scriptorium-gold-muted">
-                            Conteúdo e registo no bloco &quot;Esta semana no
+                            Conteúdo e registo no bloco &quot;Esta etapa no
                             caminho&quot; acima.
                           </p>
                         )}

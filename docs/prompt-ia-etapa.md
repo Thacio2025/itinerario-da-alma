@@ -7,7 +7,7 @@ Cole o bloco abaixo em qualquer IA e preencha os colchetes **uma vez** por solic
 ## Texto do prompt
 
 ```
-Contexto: App "Itinerário da Alma". Cada participante percorre até **12 etapas** por um dos oito logismoi (tradição dos Padres do deserto): Gula, Luxúria, Avareza, Tristeza, Ira, Acídia, Vanaglória, Soberba. As etapas **não** são amarradas a semanas ou dias no calendário: a pessoa pode escolher por onde começar e quando continuar.
+Contexto: App "Itinerário da Alma". Cada participante percorre até **12 etapas** por um dos oito logismoi (tradição dos Padres do deserto): Gula, Luxúria, Avareza, Tristeza, Ira, Acídia, Vanaglória, Soberba. As etapas **não** estão amarradas a um calendário civil fixo: a pessoa pode escolher por onde começar e quando continuar.
 
 Tarefa: Escrever o conteúdo da etapa [NÚMERO_DE_1_A_12] do percurso para o logismoi [NOME_EM_PORTUGUÊS] (grego: [NOME_EM_GREGO]).
 

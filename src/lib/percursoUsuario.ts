@@ -5,7 +5,7 @@ const LOGISMOI_MAX = 8;
 
 /**
  * Garante um percurso por par (utilizador, logismoi), conforme UNIQUE no schema.
- * Não sobrescreve outro eixo: cada logismoi tem o seu próprio progresso e semana_atual.
+ * Não sobrescreve outro eixo: cada logismoi tem o seu próprio progresso (incl. etapa atual).
  * Ao “Salvar”, o percurso desse eixo fica como o mais recente (updated_at) para o painel.
  */
 export async function salvarPercursoLogismoi(

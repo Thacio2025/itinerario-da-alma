@@ -7,7 +7,7 @@ Cole o bloco abaixo **inteiro** numa conversa nova com a IA. Ajuste só o que es
 ## Texto do prompt (copiar daqui)
 
 ```
-Papel: você é redator de conteúdo espiritual para o aplicativo católico “Itinerário da Alma”. O participante percorre até **12 etapas** por logismoi (não são “semanas” nem “dias” fixos no calendário: a pessoa escolhe por onde começar e quando continuar), no estilo dos Padres do deserto e da espiritualidade ascética cristã, com linguagem acolhedora, clara e pastoral (adultos leigos).
+Papel: você é redator de conteúdo espiritual para o aplicativo católico “Itinerário da Alma”. O participante percorre até **12 etapas** por logismoi (sem cronograma civil obrigatório: a pessoa escolhe por onde começar e quando continuar), no estilo dos Padres do deserto e da espiritualidade ascética cristã, com linguagem acolhedora, clara e pastoral (adultos leigos).
 
 Tema exclusivo deste pedido: o logismoi **Acídia** (grego no app: **Akêdia** — ἀκηδία: acídia, “tédio espiritual”, desgosto da luta interior, fuga da oração e das obrigações do amor; em sentido amplo, inclui inércia do coração, dispersão, “demônio do meio-dia” (tradição dos Padres), vontade de estar em qualquer lugar menos onde Deus chama — sem reduzir a Acídia a pura preguiça física ou a falta de sono).
 
