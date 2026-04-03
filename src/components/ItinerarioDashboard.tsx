@@ -641,7 +641,7 @@ export function ItinerarioDashboard({
                 </CardTitle>
                 <CardDescription className="text-base leading-relaxed text-scriptorium-cream/75">
                   Concluiu as etapas disponíveis. Pode rever o conteúdo abaixo;
-                  o registo das suas reflexões permanece na conta.
+                  o registro das suas reflexões permanece na conta.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -720,7 +720,7 @@ export function ItinerarioDashboard({
                         )}
                         {eFoco && !lida && !bloqueada && (
                           <p className="mt-2 text-sm text-scriptorium-gold-muted">
-                            Conteúdo e registo no bloco &quot;Esta etapa no
+                            Conteúdo e registro no bloco &quot;Esta etapa no
                             caminho&quot; acima.
                           </p>
                         )}

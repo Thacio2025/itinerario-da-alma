@@ -31,7 +31,7 @@ export function ItinerarioOnboardingIntro12({
             </strong>
             . Cada uma desbloqueia a seguinte quando for concluída com
             sinceridade — leitura patrística, doutrina, exercício e um breve
-            registo interior (reflexão ou sinal de progresso).
+            registro interior (reflexão ou sinal de progresso).
           </p>
           <p>
             {nomeLogismoi ? (

@@ -31,7 +31,7 @@ export function printCertificadoPrimeiraEtapa(
 
   const emailLinha =
     emailParticipante?.trim() ?
-      `<p class="email">Registo associado à conta: ${escapeHtml(emailParticipante.trim())}</p>`
+      `<p class="email">Registro associado à conta: ${escapeHtml(emailParticipante.trim())}</p>`
       : "";
 
   const html = `<!DOCTYPE html>

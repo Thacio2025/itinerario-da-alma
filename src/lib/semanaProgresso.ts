@@ -29,7 +29,7 @@ function confiancaValida(n: number | null | undefined): number | null {
 }
 
 /**
- * Conclui uma etapa com registo escrito (reflexão e/ou sinal) e avança o percurso.
+ * Conclui uma etapa com registro escrito (reflexão e/ou sinal) e avança o percurso.
  * Exige etapa anterior concluída (exceto na etapa 1).
  */
 export async function concluirEtapaSemana(
