@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   BookOpen,
@@ -12,6 +12,7 @@ import {
   Moon,
   Printer,
   Sparkles,
+  Users,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,8 @@ import {
   etapaEstaDesbloqueada,
 } from "@/lib/itinerarioEtapas";
 import { citacaoParaEtapaLogismoi } from "@/lib/citacoesPadresDeserto";
+import { fraseReforcoConclusao } from "@/lib/frasesReforcoConclusao";
+import { obterPlaceholdersReflexaoEtapa } from "@/lib/placeholdersReflexaoEtapa";
 import { printCertificadoPrimeiraEtapa } from "@/lib/printCertificadoPrimeiraEtapa";
 import { printEncorajamentoEtapa } from "@/lib/printEncorajamentoEtapa";
 import { mensagemValidacaoProva } from "@/lib/semanaProgresso";
@@ -186,6 +189,7 @@ export function ItinerarioDashboard({
   const [balaoParabens, setBalaoParabens] = useState<{
     numeroEtapa: number;
     tituloEtapa: string;
+    fraseReforco: string;
   } | null>(null);
 
   const temPercurso = Boolean(percurso);
@@ -195,6 +199,14 @@ export function ItinerarioDashboard({
   const etapaFoco = foco
     ? semanas.find((x) => x.numero_semana === foco)
     : undefined;
+
+  const placeholdersEtapa = useMemo(() => {
+    if (!etapaFoco || !percurso) return null;
+    return obterPlaceholdersReflexaoEtapa(
+      percurso.logismoi_id,
+      etapaFoco.numero_semana,
+    );
+  }, [etapaFoco, percurso]);
 
   useEffect(() => {
     setReflexao("");
@@ -235,6 +247,10 @@ export function ItinerarioDashboard({
     setBalaoParabens({
       numeroEtapa: numeroCompletado,
       tituloEtapa: tituloCompletado,
+      fraseReforco: fraseReforcoConclusao(
+        percurso?.logismoi_id ?? 1,
+        numeroCompletado,
+      ),
     });
   };
 
@@ -315,6 +331,9 @@ export function ItinerarioDashboard({
                 </>
               ) : null}
               . Deus abençoe o próximo passo.
+            </p>
+            <p className="mt-5 border-t border-scriptorium-gold/20 pt-5 text-center font-display text-sm italic leading-relaxed tracking-[0.02em] text-scriptorium-gold-muted">
+              {balaoParabens.fraseReforco}
             </p>
             {balaoParabens.numeroEtapa === 1 && (
               <div className="mt-8 flex flex-col gap-3">
@@ -499,8 +518,8 @@ export function ItinerarioDashboard({
           </p>
 
           {foco != null && etapaFoco && (
-            <Card className="rounded-xl border-scriptorium-gold/25 bg-gradient-to-b from-scriptorium-gold/[0.07] to-black/30 shadow-card-lift">
-              <CardHeader className="space-y-2 pb-2">
+            <Card className="rounded-xl border-scriptorium-gold/25 bg-gradient-to-b from-scriptorium-gold/[0.07] to-[rgba(20,17,13,0.92)] shadow-card-lift backdrop-blur-[1px]">
+              <CardHeader className="space-y-2 pb-2 tracking-[0.02em]">
                 <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-scriptorium-gold-muted">
                   Esta etapa no caminho · Etapa {etapaFoco.numero_semana}
                   {etapaFoco.tipo_fase ? ` · ${etapaFoco.tipo_fase}` : ""}
@@ -509,10 +528,10 @@ export function ItinerarioDashboard({
                   {etapaFoco.titulo_semana}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-8 pt-0">
+              <CardContent className="space-y-8 pt-0 tracking-[0.02em]">
                 <EtapaConteudoMarkdown s={etapaFoco} />
 
-                <div className="space-y-4 rounded-lg border border-white/10 bg-black/35 p-4 sm:p-5">
+                <div className="space-y-4 rounded-lg border border-white/10 bg-[rgba(0,0,0,0.88)] p-4 sm:p-5">
                   <p className="font-display text-base font-medium text-scriptorium-cream">
                     Antes de concluir esta etapa
                   </p>
@@ -529,7 +548,10 @@ export function ItinerarioDashboard({
                       id="reflexao-etapa"
                       value={reflexao}
                       onChange={(e) => setReflexao(e.target.value)}
-                      placeholder="O que esta etapa despertou em si?"
+                      placeholder={
+                        placeholdersEtapa?.reflexao ??
+                        "O que esta etapa despertou em si?"
+                      }
                       className="min-h-[100px]"
                     />
                   </div>
@@ -539,7 +561,10 @@ export function ItinerarioDashboard({
                       id="sinal-etapa"
                       value={sinalObservado}
                       onChange={(e) => setSinalObservado(e.target.value)}
-                      placeholder="Que mudança concreta notou na oração, nas relações ou na disposição interior?"
+                      placeholder={
+                        placeholdersEtapa?.sinal ??
+                        "Que mudança concreta notou na oração, nas relações ou na disposição interior?"
+                      }
                       className="min-h-[100px]"
                     />
                   </div>
@@ -569,6 +594,17 @@ export function ItinerarioDashboard({
                       das etapas.
                     </p>
                   </div>
+                  <p className="flex items-start gap-2.5 text-xs leading-relaxed text-scriptorium-cream/50">
+                    <Users
+                      className="mt-0.5 h-4 w-4 shrink-0 text-scriptorium-gold-muted/80"
+                      strokeWidth={1.5}
+                      aria-hidden
+                    />
+                    <span>
+                      Você não está sozinho neste deserto. Outros combatentes
+                      estão nesta etapa hoje.
+                    </span>
+                  </p>
                   <Button
                     type="button"
                     disabled={
@@ -629,7 +665,7 @@ export function ItinerarioDashboard({
                   <div
                     key={s.numero_semana}
                     className={cn(
-                      "overflow-hidden rounded-xl border bg-black/25 shadow-card-lift",
+                      "overflow-hidden rounded-xl border bg-[rgba(20,17,13,0.88)] shadow-card-lift",
                       eFoco && !lida
                         ? "border-scriptorium-gold/35 ring-1 ring-scriptorium-gold/15"
                         : "border-white/10",
@@ -691,7 +727,7 @@ export function ItinerarioDashboard({
                       )}
                     </button>
                     {aberta && !bloqueada && (
-                      <div className="space-y-6 border-t border-white/10 bg-black/30 px-4 py-6 sm:px-6">
+                      <div className="space-y-6 border-t border-white/10 bg-[rgba(0,0,0,0.85)] px-4 py-6 tracking-[0.02em] sm:px-6">
                         {eFoco && !lida && (
                           <p className="text-sm text-scriptorium-cream/60">
                             Leia e registe a reflexão no cartão destacado acima
