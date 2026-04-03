@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, ExternalLink, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -12,6 +12,35 @@ const DIAGNOSTICO_URL = "https://diagnosticoespiritual.com.br/";
 
 function labelLogismoi(l: LogismoiOpcao) {
   return `${l.nome_portugues} — ${l.nome_grego}`;
+}
+
+/** Compara ignorando acentos (ex.: Orgê vs Orgē). */
+function fold(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase();
+}
+
+/** Filtra por palavras/tokens (rótulo completo "Ira — Orgê" continua a funcionar). */
+function logismoiMatchesQuery(l: LogismoiOpcao, raw: string): boolean {
+  const q = raw.trim();
+  if (!q) return true;
+  const tokens = q
+    .split(/[\s—–,-]+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
+  if (tokens.length === 0) return true;
+  const nome = fold(l.nome_portugues);
+  const grego = fold(l.nome_grego);
+  const desc = l.descricao_breve ? fold(l.descricao_breve) : "";
+  return tokens.some((tok) => {
+    const t = fold(tok);
+    return (
+      t.length >= 1 &&
+      (nome.includes(t) || grego.includes(t) || (desc && desc.includes(t)))
+    );
+  });
 }
 
 type ItinerarioEscolhaLogismoiProps = {
@@ -33,6 +62,7 @@ export function ItinerarioEscolhaLogismoi({
   const [submitting, setSubmitting] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveOk, setSaveOk] = useState(false);
+  const listaRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     if (logismoiIdAtual != null && items.length > 0) {
@@ -54,16 +84,10 @@ export function ItinerarioEscolhaLogismoi({
     }
   }, [items, logismoiIdAtual, itinerarioLoading]);
 
-  const filtered = useMemo(() => {
-    const q = inputValue.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter(
-      (l) =>
-        l.nome_portugues.toLowerCase().includes(q) ||
-        l.nome_grego.toLowerCase().includes(q) ||
-        (l.descricao_breve?.toLowerCase().includes(q) ?? false),
-    );
-  }, [items, inputValue]);
+  const filtered = useMemo(
+    () => items.filter((l) => logismoiMatchesQuery(l, inputValue)),
+    [items, inputValue],
+  );
 
   const selecionar = (l: LogismoiOpcao) => {
     setSelectedId(l.id);
@@ -148,8 +172,8 @@ export function ItinerarioEscolhaLogismoi({
               Buscar e selecionar o logismoi
             </label>
             <p className="text-xs text-scriptorium-cream/55">
-              A lista completa aparece abaixo. Use o campo para filtrar por
-              nome.
+              Toque no campo para ver todas as opções; digite para filtrar por
+              nome (português ou grego).
             </p>
             <div className="relative">
               <Search
@@ -158,13 +182,23 @@ export function ItinerarioEscolhaLogismoi({
               />
               <input
                 id="busca-logismoi"
-                type="search"
+                type="text"
                 autoComplete="off"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-controls="lista-logismoi"
+                aria-expanded="true"
                 value={inputValue}
                 onChange={(e) => {
                   setInputValue(e.target.value);
                   setSaveOk(false);
                   setSaveError(null);
+                }}
+                onFocus={() => {
+                  listaRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                  });
                 }}
                 placeholder="Filtrar a lista (ex.: Ira, Luxúria, Orgê…)"
                 className="w-full rounded-xl border border-white/15 bg-black/35 py-3 pl-10 pr-4 text-sm text-scriptorium-cream placeholder:text-scriptorium-cream/40 outline-none ring-scriptorium-gold/30 transition-shadow focus:border-scriptorium-gold/40 focus:ring-2"
@@ -172,7 +206,9 @@ export function ItinerarioEscolhaLogismoi({
             </div>
             {filtered.length > 0 ? (
               <ul
-                className="max-h-72 overflow-y-auto rounded-xl border border-white/10 bg-[#14110d] py-1 shadow-inner ring-1 ring-white/5"
+                ref={listaRef}
+                id="lista-logismoi"
+                className="max-h-72 scroll-mt-4 overflow-y-auto rounded-xl border border-white/10 bg-[#14110d] py-1 shadow-inner ring-1 ring-white/5 focus-within:ring-scriptorium-gold/25"
                 role="listbox"
                 aria-label="Lista de logismoi"
               >
