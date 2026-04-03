@@ -14,6 +14,7 @@ export function ItinerarioAppPage() {
     percurso,
     semanas,
     semanasLidas,
+    etapaConcluidaEm,
     loading: itinerarioLoading,
     error: itinerarioError,
     refetch: refetchItinerario,
@@ -110,6 +111,7 @@ export function ItinerarioAppPage() {
           percurso={percurso}
           semanas={semanas}
           semanasLidas={semanasLidas}
+          etapaConcluidaEm={etapaConcluidaEm}
           loading={itinerarioLoading}
           fetchError={itinerarioError}
           onMarcarSemanaLida={marcarSemanaLida}

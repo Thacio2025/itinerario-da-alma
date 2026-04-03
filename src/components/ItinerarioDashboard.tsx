@@ -9,6 +9,8 @@ import {
   Loader2,
   Lock,
   Moon,
+  Printer,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +28,8 @@ import {
   primeiraEtapaEmAberto,
   etapaEstaDesbloqueada,
 } from "@/lib/itinerarioEtapas";
+import { citacaoParaEtapaLogismoi } from "@/lib/citacoesPadresDeserto";
+import { printEncorajamentoEtapa } from "@/lib/printEncorajamentoEtapa";
 import { mensagemValidacaoProva } from "@/lib/semanaProgresso";
 import type { ConcluirEtapaPayload } from "@/lib/semanaProgresso";
 import type {
@@ -144,6 +148,7 @@ type ItinerarioDashboardProps = {
   percurso?: PercursoUsuario | null;
   semanas?: SemanaItinerarioRow[];
   semanasLidas?: Record<number, boolean>;
+  etapaConcluidaEm?: Record<number, string | null>;
   loading?: boolean;
   fetchError?: string | null;
   onMarcarSemanaLida?: (
@@ -159,6 +164,7 @@ export function ItinerarioDashboard({
   percurso = null,
   semanas = [],
   semanasLidas = {},
+  etapaConcluidaEm = {},
   loading = false,
   fetchError = null,
   onMarcarSemanaLida,
@@ -170,6 +176,10 @@ export function ItinerarioDashboard({
   const [reflexao, setReflexao] = useState("");
   const [sinalObservado, setSinalObservado] = useState("");
   const [confianca, setConfianca] = useState(5);
+  const [encorajamentoPosEtapa, setEncorajamentoPosEtapa] = useState<{
+    numeroEtapa: number;
+    tituloEtapa: string;
+  } | null>(null);
 
   const temPercurso = Boolean(percurso);
   const temSemanasCadastradas = semanas.length > 0;
@@ -204,10 +214,17 @@ export function ItinerarioDashboard({
       sinal_progresso_observado: sinalObservado,
       confianca_virtude: confianca,
     };
+    const numeroCompletado = foco;
+    const tituloCompletado = etapaFoco?.titulo_semana ?? "";
     const res = await onMarcarSemanaLida(foco, payload);
     if (!res.ok) {
       setErroMarcar(res.message);
+      return;
     }
+    setEncorajamentoPosEtapa({
+      numeroEtapa: numeroCompletado,
+      tituloEtapa: tituloCompletado,
+    });
   };
 
   return (
@@ -284,6 +301,67 @@ export function ItinerarioDashboard({
 
       {!loading && temPercurso && temSemanasCadastradas && (
         <div className="space-y-8">
+          {encorajamentoPosEtapa && percurso?.logismoi && (
+            <Card className="rounded-xl border-scriptorium-gold/30 bg-gradient-to-br from-scriptorium-gold/[0.09] to-black/35 shadow-card-lift">
+              <CardHeader className="space-y-2 pb-2">
+                <CardTitle className="font-display text-xl text-scriptorium-cream">
+                  Etapa {encorajamentoPosEtapa.numeroEtapa} concluída
+                </CardTitle>
+                <CardDescription className="text-base leading-relaxed text-scriptorium-cream/80">
+                  A frase combina o seu eixo espiritual (logismoi) com o número
+                  desta etapa. Use &quot;Guardar como PDF&quot; na janela de
+                  impressão, se o navegador permitir.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {(() => {
+                  const c = citacaoParaEtapaLogismoi(
+                    encorajamentoPosEtapa.numeroEtapa,
+                    percurso.logismoi_id,
+                  );
+                  return (
+                    <blockquote className="border-l-2 border-scriptorium-gold/45 pl-4 text-sm leading-relaxed text-scriptorium-cream/85">
+                      <p className="italic">&ldquo;{c.texto}&rdquo;</p>
+                      <footer className="mt-2 text-xs not-italic text-scriptorium-gold-muted">
+                        — {c.autor}
+                      </footer>
+                    </blockquote>
+                  );
+                })()}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button
+                  type="button"
+                  className="gap-2 bg-scriptorium-gold text-scriptorium-bg hover:bg-scriptorium-gold/90"
+                  onClick={() => {
+                    const c = citacaoParaEtapaLogismoi(
+                      encorajamentoPosEtapa.numeroEtapa,
+                      percurso.logismoi_id,
+                    );
+                    printEncorajamentoEtapa({
+                      numeroEtapa: encorajamentoPosEtapa.numeroEtapa,
+                      tituloEtapa: encorajamentoPosEtapa.tituloEtapa,
+                      nomeLogismoi: percurso.logismoi.nome_portugues,
+                      dataConclusao: new Date(),
+                      citacao: c,
+                    });
+                  }}
+                >
+                  <Printer className="h-4 w-4" aria-hidden />
+                  Imprimir ou guardar PDF
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="gap-2 text-scriptorium-cream/80 hover:bg-white/10 hover:text-scriptorium-cream"
+                  onClick={() => setEncorajamentoPosEtapa(null)}
+                >
+                  <X className="h-4 w-4" aria-hidden />
+                  Fechar
+                </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <p className="max-w-2xl text-sm leading-relaxed text-scriptorium-cream/65">
             O caminho abre etapa por etapa. Registe uma reflexão ou um sinal de
             progresso para concluir — não basta marcar sem escrever. As etapas
@@ -402,8 +480,9 @@ export function ItinerarioDashboard({
               Caminho das etapas
             </h3>
             <p className="text-sm text-scriptorium-cream/55">
-              Etapas futuras permanecem fechadas até concluir a anterior. Toque
-              numa etapa já concluída para reler o material.
+              Etapas futuras permanecem fechadas até concluir a anterior. Abra
+              uma etapa já concluída para reler o texto ou voltar a imprimir o
+              lembrete em PDF.
             </p>
             <div className="flex flex-col gap-2">
               {semanas.map((s) => {
@@ -481,21 +560,61 @@ export function ItinerarioDashboard({
                         </span>
                       )}
                     </button>
-                    {aberta && !bloqueada && !eFoco && (
+                    {aberta && !bloqueada && (
                       <div className="space-y-6 border-t border-white/10 bg-black/30 px-4 py-6 sm:px-6">
-                        <EtapaConteudoMarkdown s={s} />
-                        <p className="text-sm text-scriptorium-cream/55">
-                          Para concluir etapas em aberto, use o bloco principal
-                          no topo da página.
-                        </p>
-                      </div>
-                    )}
-                    {aberta && !bloqueada && eFoco && !lida && (
-                      <div className="border-t border-white/10 bg-black/20 px-4 py-4 sm:px-6">
-                        <p className="text-sm text-scriptorium-cream/60">
-                          Leia e registe a reflexão no cartão destacado acima —
-                          não é necessário repetir aqui.
-                        </p>
+                        {eFoco && !lida && (
+                          <p className="text-sm text-scriptorium-cream/60">
+                            Leia e registe a reflexão no cartão destacado acima
+                            — não é necessário repetir aqui.
+                          </p>
+                        )}
+                        {!eFoco && (
+                          <>
+                            <EtapaConteudoMarkdown s={s} />
+                            {!lida && (
+                              <p className="text-sm text-scriptorium-cream/55">
+                                Para concluir etapas em aberto, use o bloco
+                                principal no topo da página.
+                              </p>
+                            )}
+                          </>
+                        )}
+                        {eFoco && lida && (
+                          <p className="text-sm text-scriptorium-cream/60">
+                            O conteúdo desta etapa está no bloco principal
+                            acima. Pode imprimir o lembrete abaixo.
+                          </p>
+                        )}
+                        {lida && percurso?.logismoi && (
+                          <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-4">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="gap-2 border-scriptorium-gold/35 text-scriptorium-gold hover:bg-scriptorium-gold/10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const ds =
+                                  etapaConcluidaEm[s.numero_semana];
+                                printEncorajamentoEtapa({
+                                  numeroEtapa: s.numero_semana,
+                                  tituloEtapa: s.titulo_semana,
+                                  nomeLogismoi: percurso.logismoi.nome_portugues,
+                                  dataConclusao: ds
+                                    ? new Date(ds)
+                                    : new Date(),
+                                  citacao: citacaoParaEtapaLogismoi(
+                                    s.numero_semana,
+                                    percurso.logismoi_id,
+                                  ),
+                                });
+                              }}
+                            >
+                              <Printer className="h-4 w-4" aria-hidden />
+                              Imprimir lembrete (PDF)
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

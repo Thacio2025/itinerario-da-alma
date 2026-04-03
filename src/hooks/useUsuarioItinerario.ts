@@ -42,6 +42,9 @@ export function useUsuarioItinerario() {
   const [percurso, setPercurso] = useState<PercursoUsuario | null>(null);
   const [semanas, setSemanas] = useState<SemanaItinerarioRow[]>([]);
   const [semanasLidas, setSemanasLidas] = useState<Record<number, boolean>>({});
+  const [etapaConcluidaEm, setEtapaConcluidaEm] = useState<
+    Record<number, string | null>
+  >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [marcandoSemana, setMarcandoSemana] = useState<number | null>(null);
@@ -51,6 +54,7 @@ export function useUsuarioItinerario() {
       setPercurso(null);
       setSemanas([]);
       setSemanasLidas({});
+      setEtapaConcluidaEm({});
       setError(null);
       setLoading(false);
       return;
@@ -79,6 +83,7 @@ export function useUsuarioItinerario() {
       setPercurso(null);
       setSemanas([]);
       setSemanasLidas({});
+      setEtapaConcluidaEm({});
       setLoading(false);
       return;
     }
@@ -88,6 +93,7 @@ export function useUsuarioItinerario() {
       setPercurso(null);
       setSemanas([]);
       setSemanasLidas({});
+      setEtapaConcluidaEm({});
       setLoading(false);
       return;
     }
@@ -141,13 +147,23 @@ export function useUsuarioItinerario() {
     if (e3) {
       setError((prev) => prev ?? e3.message);
       setSemanasLidas({});
+      setEtapaConcluidaEm({});
     } else {
       const lidas: Record<number, boolean> = {};
-      prog?.forEach((p: { numero_semana: number; concluida_em: string | null; status: string | null }) => {
-        lidas[p.numero_semana] =
-          p.concluida_em != null || p.status === "concluida";
-      });
+      const datas: Record<number, string | null> = {};
+      prog?.forEach(
+        (p: {
+          numero_semana: number;
+          concluida_em: string | null;
+          status: string | null;
+        }) => {
+          lidas[p.numero_semana] =
+            p.concluida_em != null || p.status === "concluida";
+          datas[p.numero_semana] = p.concluida_em;
+        },
+      );
       setSemanasLidas(lidas);
+      setEtapaConcluidaEm(datas);
     }
 
     setLoading(false);
@@ -186,6 +202,7 @@ export function useUsuarioItinerario() {
     percurso,
     semanas,
     semanasLidas,
+    etapaConcluidaEm,
     loading,
     error,
     refetch,
