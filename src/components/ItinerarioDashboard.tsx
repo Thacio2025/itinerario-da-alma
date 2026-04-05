@@ -357,6 +357,8 @@ export function ItinerarioDashboard({
   );
 
   const [indiceSlide, setIndiceSlide] = useState(0);
+  /** Com percurso ativo, a lista completa fica recolhida para focar na etapa atual. */
+  const [mostrarCaminhoEtapas, setMostrarCaminhoEtapas] = useState(false);
 
   const placeholdersEtapa = useMemo(() => {
     if (!etapaFoco || !percurso) return null;
@@ -843,9 +845,29 @@ export function ItinerarioDashboard({
           )}
 
           <div className="space-y-3">
-            <h3 className="font-display text-lg font-semibold text-scriptorium-cream">
-              Caminho das etapas
-            </h3>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex h-auto w-full items-center justify-between gap-3 border-white/15 bg-black/25 px-4 py-3 text-left text-scriptorium-cream hover:bg-white/[0.06]"
+              onClick={() => setMostrarCaminhoEtapas((v) => !v)}
+              aria-expanded={mostrarCaminhoEtapas}
+            >
+              <span className="font-display text-base font-semibold">
+                {mostrarCaminhoEtapas
+                  ? "Ocultar caminho das etapas"
+                  : "Ver caminho das etapas"}
+              </span>
+              <ChevronDown
+                className={cn(
+                  "h-5 w-5 shrink-0 text-scriptorium-gold-muted transition-transform",
+                  mostrarCaminhoEtapas && "rotate-180",
+                )}
+                aria-hidden
+              />
+            </Button>
+            {mostrarCaminhoEtapas && (
+              <>
+            <h3 className="sr-only">Caminho das etapas</h3>
             <p className="text-sm text-scriptorium-cream/55">
               Etapas futuras abrem após concluir a anterior e aguardar 24 horas.
               Abra uma etapa já concluída para reler o texto ou voltar a imprimir
@@ -922,7 +944,7 @@ export function ItinerarioDashboard({
                             {textoBloqueio}
                           </p>
                         )}
-                        {eFoco && !lida && !bloqueada && (
+                        {eFoco && !lida && !bloqueada && mostrarCaminhoEtapas && (
                           <p className="mt-2 text-sm text-scriptorium-gold-muted">
                             Conteúdo e registro no bloco &quot;Esta etapa no
                             caminho&quot; acima.
@@ -940,7 +962,7 @@ export function ItinerarioDashboard({
                       <div className="space-y-6 border-t border-white/10 bg-[rgba(0,0,0,0.85)] px-4 py-6 tracking-[0.02em] sm:px-6">
                         {eFoco && !lida && (
                           <p className="text-sm text-scriptorium-cream/60">
-                            Leia e registe a reflexão no cartão destacado acima
+                            Leia e registre a reflexão no cartão destacado acima
                             — não é necessário repetir aqui.
                           </p>
                         )}
@@ -999,6 +1021,8 @@ export function ItinerarioDashboard({
                 );
               })}
             </div>
+              </>
+            )}
           </div>
         </div>
       )}
