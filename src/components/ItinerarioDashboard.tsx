@@ -4,6 +4,8 @@ import {
   BookOpen,
   Check,
   ChevronDown,
+  ChevronRight,
+  Clock,
   Compass,
   Heart,
   Download,
@@ -30,7 +32,13 @@ import { LogismoiGlyph } from "@/lib/logismoiLucideIcons";
 import {
   primeiraEtapaEmAberto,
   etapaEstaDesbloqueada,
+  aguardandoIntervaloEntreEtapas,
+  mensagemBloqueioEtapa,
 } from "@/lib/itinerarioEtapas";
+import {
+  slidesDaEtapa,
+  type EtapaSlideId,
+} from "@/lib/etapaSlides";
 import { citacaoParaEtapaLogismoi } from "@/lib/citacoesPadresDeserto";
 import { fraseReforcoConclusao } from "@/lib/frasesReforcoConclusao";
 import { obterPlaceholdersReflexaoEtapa } from "@/lib/placeholdersReflexaoEtapa";
@@ -145,6 +153,127 @@ function EtapaConteudoMarkdown({ s }: { s: SemanaItinerarioRow }) {
   );
 }
 
+function EtapaSlideSection({
+  slide,
+  s,
+}: {
+  slide: EtapaSlideId;
+  s: SemanaItinerarioRow;
+}) {
+  switch (slide) {
+    case "leitura":
+      return (
+        <div className="space-y-4">
+          {s.leitura_fonte && (
+            <p className="text-xs font-medium uppercase tracking-wide text-scriptorium-gold-muted">
+              Fonte: {s.leitura_fonte}
+            </p>
+          )}
+          <section>
+            <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wider text-scriptorium-gold">
+              Leitura
+            </h3>
+            <BlocoMarkdown texto={s.leitura_texto} />
+          </section>
+        </div>
+      );
+    case "doutrina":
+      return (
+        <section className="space-y-3">
+          {s.doutrina_titulo && (
+            <h3 className="font-display text-lg text-scriptorium-cream">
+              {s.doutrina_titulo}
+            </h3>
+          )}
+          <BlocoMarkdown texto={s.doutrina_corpo} />
+        </section>
+      );
+    case "exercicio":
+      return (
+        <section className="space-y-3">
+          {s.exercicio_titulo && (
+            <h3 className="font-display text-lg text-scriptorium-cream">
+              {s.exercicio_titulo}
+            </h3>
+          )}
+          <BlocoMarkdown texto={s.exercicio_descricao} />
+        </section>
+      );
+    case "sinal":
+      return (
+        <section className="space-y-3">
+          {s.sinal_progresso_titulo && (
+            <h3 className="font-display text-lg text-scriptorium-cream">
+              {s.sinal_progresso_titulo}
+            </h3>
+          )}
+          <BlocoMarkdown texto={s.sinal_progresso_descricao} />
+        </section>
+      );
+    default:
+      return null;
+  }
+}
+
+function CartaoAguardando24h({
+  numeroEtapa,
+  liberadaEm,
+}: {
+  numeroEtapa: number;
+  liberadaEm: Date;
+}) {
+  const [agora, setAgora] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setAgora(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  const ms = Math.max(0, liberadaEm.getTime() - agora);
+  const h = Math.floor(ms / 3_600_000);
+  const min = Math.floor((ms % 3_600_000) / 60_000);
+  const fmt = new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+
+  return (
+    <Card className="rounded-xl border-scriptorium-gold/35 bg-gradient-to-br from-scriptorium-gold/[0.08] to-black/40 shadow-card-lift">
+      <CardHeader className="space-y-3">
+        <div className="flex items-center gap-2 text-scriptorium-gold-muted">
+          <Clock className="h-5 w-5 shrink-0" strokeWidth={1.5} aria-hidden />
+          <CardTitle className="font-display text-xl text-scriptorium-cream">
+            Etapa {numeroEtapa} — aguarde 24 horas
+          </CardTitle>
+        </div>
+        <CardDescription className="text-base leading-relaxed text-scriptorium-cream/80">
+          Para iniciar a etapa {numeroEtapa}, é preciso esperar{" "}
+          <strong className="font-medium text-scriptorium-cream/95">
+            24 horas
+          </strong>{" "}
+          após a conclusão da etapa anterior. Esse intervalo ajuda a deixar o
+          combate espiritual respirar antes do próximo passo.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2 border-t border-white/10 pt-2">
+        <p className="text-sm text-scriptorium-gold-muted">
+          Previsão de abertura:{" "}
+          <span className="font-medium text-scriptorium-cream/90">
+            {fmt.format(liberadaEm)}
+          </span>
+        </p>
+        {ms > 0 && (
+          <p className="text-sm tabular-nums text-scriptorium-cream/70">
+            Faltam cerca de{" "}
+            <span className="text-scriptorium-gold-muted">
+              {h > 0 ? `${h} h ` : ""}
+              {min} min
+            </span>
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 type MarcarResult =
   | { ok: true }
   | { ok: false; message: string };
@@ -195,10 +324,39 @@ export function ItinerarioDashboard({
   const temPercurso = Boolean(percurso);
   const temSemanasCadastradas = semanas.length > 0;
 
-  const foco = primeiraEtapaEmAberto(semanas, semanasLidas);
+  const foco = primeiraEtapaEmAberto(
+    semanas,
+    semanasLidas,
+    etapaConcluidaEm,
+  );
   const etapaFoco = foco
     ? semanas.find((x) => x.numero_semana === foco)
     : undefined;
+
+  const aguardando24h = useMemo(
+    () =>
+      temPercurso && temSemanasCadastradas
+        ? aguardandoIntervaloEntreEtapas(
+            semanas,
+            semanasLidas,
+            etapaConcluidaEm,
+          )
+        : null,
+    [
+      temPercurso,
+      temSemanasCadastradas,
+      semanas,
+      semanasLidas,
+      etapaConcluidaEm,
+    ],
+  );
+
+  const slidesEtapa = useMemo(
+    () => (etapaFoco ? slidesDaEtapa(etapaFoco) : []),
+    [etapaFoco],
+  );
+
+  const [indiceSlide, setIndiceSlide] = useState(0);
 
   const placeholdersEtapa = useMemo(() => {
     if (!etapaFoco || !percurso) return null;
@@ -213,6 +371,7 @@ export function ItinerarioDashboard({
     setSinalObservado("");
     setConfianca(5);
     setErroMarcar(null);
+    setIndiceSlide(0);
   }, [foco]);
 
   const toggle = (n: number) => {
@@ -515,12 +674,24 @@ export function ItinerarioDashboard({
             </Card>
           )}
           <p className="max-w-2xl text-sm leading-relaxed text-scriptorium-cream/65">
-            O caminho abre etapa por etapa. Registe uma reflexão ou um sinal de
-            progresso para concluir — não basta marcar sem escrever. As etapas
-            seguintes desbloqueiam quando a anterior estiver concluída.
+            O caminho abre etapa por etapa. Avance com &quot;Seguir&quot; até o
+            registro final. Depois de concluir, aguarde 24 horas para a etapa
+            seguinte se abrir. Registre uma reflexão ou um sinal de progresso
+            na última parte — não basta marcar sem escrever.
           </p>
 
-          {foco != null && etapaFoco && (
+          {aguardando24h && (
+            <CartaoAguardando24h
+              numeroEtapa={aguardando24h.numeroEtapa}
+              liberadaEm={aguardando24h.liberadaEm}
+            />
+          )}
+
+          {foco != null && etapaFoco && (() => {
+            const slideAtual = slidesEtapa[indiceSlide] ?? "conclusao";
+            const totalSlides = slidesEtapa.length;
+            const passoNumero = indiceSlide + 1;
+            return (
             <Card
               id="primeira-etapa-conteudo"
               className="scroll-mt-28 rounded-xl border-scriptorium-gold/25 bg-gradient-to-b from-scriptorium-gold/[0.07] to-[rgba(20,17,13,0.92)] shadow-card-lift backdrop-blur-[1px]"
@@ -533,10 +704,32 @@ export function ItinerarioDashboard({
                 <CardTitle className="font-display text-2xl text-scriptorium-cream md:text-[1.65rem]">
                   {etapaFoco.titulo_semana}
                 </CardTitle>
+                <p className="text-xs text-scriptorium-gold-muted/90">
+                  Passo {passoNumero} de {totalSlides}
+                </p>
               </CardHeader>
               <CardContent className="space-y-8 pt-0 tracking-[0.02em]">
-                <EtapaConteudoMarkdown s={etapaFoco} />
+                {slideAtual !== "conclusao" && (
+                  <div className="min-h-[12rem] space-y-6">
+                    <EtapaSlideSection slide={slideAtual} s={etapaFoco} />
+                    <div className="flex justify-end border-t border-white/10 pt-6">
+                      <Button
+                        type="button"
+                        className="gap-2 bg-scriptorium-gold text-scriptorium-bg hover:bg-scriptorium-gold/90"
+                        onClick={() =>
+                          setIndiceSlide((i) =>
+                            Math.min(i + 1, slidesEtapa.length - 1),
+                          )
+                        }
+                      >
+                        Seguir
+                        <ChevronRight className="h-4 w-4" aria-hidden />
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
+                {slideAtual === "conclusao" && (
                 <div className="space-y-4 rounded-lg border border-white/10 bg-[rgba(0,0,0,0.88)] p-4 sm:p-5">
                   <p className="font-display text-base font-medium text-scriptorium-cream">
                     Antes de concluir esta etapa
@@ -622,18 +815,20 @@ export function ItinerarioDashboard({
                     {marcandoSemana === foco ? (
                       <>
                         <Loader2 className="animate-spin" />
-                        A registar…
+                        Registrando…
                       </>
                     ) : (
                       "Concluir etapa e desbloquear a seguinte"
                     )}
                   </Button>
                 </div>
+                )}
               </CardContent>
             </Card>
-          )}
+            );
+          })()}
 
-          {foco == null && semanas.length > 0 && (
+          {foco == null && semanas.length > 0 && !aguardando24h && (
             <Card className="rounded-xl border-emerald-500/20 bg-emerald-950/20 shadow-card-lift">
               <CardHeader>
                 <CardTitle className="font-display text-xl text-scriptorium-cream">
@@ -652,9 +847,9 @@ export function ItinerarioDashboard({
               Caminho das etapas
             </h3>
             <p className="text-sm text-scriptorium-cream/55">
-              Etapas futuras permanecem fechadas até concluir a anterior. Abra
-              uma etapa já concluída para reler o texto ou voltar a imprimir o
-              lembrete em PDF.
+              Etapas futuras abrem após concluir a anterior e aguardar 24 horas.
+              Abra uma etapa já concluída para reler o texto ou voltar a imprimir
+              o lembrete em PDF.
             </p>
             <div className="flex flex-col gap-2">
               {semanas.map((s) => {
@@ -662,10 +857,19 @@ export function ItinerarioDashboard({
                 const desbloqueada = etapaEstaDesbloqueada(
                   s.numero_semana,
                   semanasLidas,
+                  etapaConcluidaEm,
                 );
                 const aberta = expandida === s.numero_semana;
                 const eFoco = foco === s.numero_semana;
                 const bloqueada = !desbloqueada;
+                const textoBloqueio = bloqueada
+                  ? mensagemBloqueioEtapa(
+                      s.numero_semana,
+                      semanasLidas,
+                      etapaConcluidaEm,
+                    ) ??
+                    `Disponível após concluir a etapa ${s.numero_semana - 1}.`
+                  : null;
 
                 return (
                   <div
@@ -713,9 +917,9 @@ export function ItinerarioDashboard({
                         <p className="mt-1 font-display text-lg font-semibold leading-snug text-scriptorium-cream">
                           {s.titulo_semana}
                         </p>
-                        {bloqueada && (
+                        {textoBloqueio && (
                           <p className="mt-2 text-sm text-scriptorium-cream/55">
-                            Disponível após concluir a etapa {s.numero_semana - 1}.
+                            {textoBloqueio}
                           </p>
                         )}
                         {eFoco && !lida && !bloqueada && (

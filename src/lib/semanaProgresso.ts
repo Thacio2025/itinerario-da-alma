@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { INTERVALO_ENTRE_ETAPAS_MS } from "@/lib/itinerarioEtapas";
 
 const MIN_CARACTERES_PROVA = 20;
 
@@ -79,8 +80,22 @@ export async function concluirEtapaSemana(
     if (!prevOk) {
       return {
         ok: false,
-        message: "Conclua e registe a etapa anterior antes de avançar.",
+        message: "Conclua e registre a etapa anterior antes de avançar.",
       };
+    }
+    const concluidaPrev = prev?.concluida_em;
+    if (typeof concluidaPrev === "string" && concluidaPrev.length > 0) {
+      const t = new Date(concluidaPrev).getTime();
+      if (
+        !Number.isNaN(t) &&
+        Date.now() < t + INTERVALO_ENTRE_ETAPAS_MS
+      ) {
+        return {
+          ok: false,
+          message:
+            "Aguarde 24 horas após a conclusão da etapa anterior para concluir esta etapa.",
+        };
+      }
     }
   }
 
@@ -130,7 +145,7 @@ export async function concluirEtapaSemana(
 
   const proximaEtapaNumero = Math.min(12, numeroSemana + 1);
   const proximaData = new Date(
-    Date.now() + 7 * 24 * 60 * 60 * 1000,
+    Date.now() + 24 * 60 * 60 * 1000,
   ).toISOString();
 
   const { error: perErr } = await supabase

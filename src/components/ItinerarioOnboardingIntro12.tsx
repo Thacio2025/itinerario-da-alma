@@ -29,9 +29,13 @@ export function ItinerarioOnboardingIntro12({
             <strong className="font-medium text-scriptorium-cream/95">
               doze etapas sequenciais
             </strong>
-            . Cada uma desbloqueia a seguinte quando for concluída com
-            sinceridade — leitura patrística, doutrina, exercício e um breve
-            registro interior (reflexão ou sinal de progresso).
+            . Em cada uma, o conteúdo aparece em passos (leitura, doutrina,
+            exercício, orientações) até o registro final. Depois de concluir
+            uma etapa, a seguinte só abre após{" "}
+            <strong className="font-medium text-scriptorium-cream/95">
+              24 horas
+            </strong>
+            , para dar tempo ao combate espiritual respirar.
           </p>
           <p>
             {nomeLogismoi ? (
